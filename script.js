@@ -1489,6 +1489,13 @@ document.addEventListener('DOMContentLoaded', () => {
           .map((role) => role.replaceAll('_', ' ')).join(', ')));
         const assignmentCell = document.createElement('td');
         const assignments = assignmentLabels.get(profile.id) || [];
+        const assignmentList = document.createElement('details');
+        assignmentList.className = 'teacher-assignment-list';
+        assignmentList.open = window.matchMedia('(min-width: 851px)').matches;
+        const assignmentSummary = document.createElement('summary');
+        assignmentSummary.textContent = `${assignments.length} assignment${assignments.length === 1 ? '' : 's'}`;
+        const assignmentItems = document.createElement('div');
+        assignmentItems.className = 'teacher-assignment-items';
         assignments.forEach((assignment) => {
           const item = document.createElement('div');
           item.className = 'assignment-item';
@@ -1502,9 +1509,14 @@ document.addEventListener('DOMContentLoaded', () => {
             remove.dataset.assignmentType = assignment.type;
             item.append(remove);
           }
-          assignmentCell.append(item);
+          assignmentItems.append(item);
         });
-        if (!assignments.length) assignmentCell.textContent = 'No assignments';
+        if (assignments.length) {
+          assignmentList.append(assignmentSummary, assignmentItems);
+          assignmentCell.append(assignmentList);
+        } else {
+          assignmentCell.textContent = 'No assignments';
+        }
         row.append(assignmentCell);
         const statusCell = document.createElement('td');
         const badge = document.createElement('span');
