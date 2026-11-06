@@ -309,6 +309,10 @@ button, input, select {
   display: none;
 }
 
+body.auth-required .menu-toggle {
+  display: none;
+}
+
 .nav-item {
   border: none;
   background: transparent;
