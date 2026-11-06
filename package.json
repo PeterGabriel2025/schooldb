@@ -1,0 +1,23 @@
+{
+  "name": "eduresults-school-portal",
+  "version": "1.0.0",
+  "description": "EduResults school result management portal",
+  "main": "script.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "UNLICENSED",
+  "type": "module",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.118.0"
+  },
+  "devDependencies": {
+    "supabase": "^2.121.0",
+    "vite": "^8.3.4"
+  }
+}

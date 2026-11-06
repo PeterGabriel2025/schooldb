@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EduResults School Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <script type="module" crossorigin src="/assets/index-hcuonif1.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-DPHDJnV_.css">
+  </head>
+  <body class="auth-required">
+    <div class="splash-screen" data-splash-screen role="status" aria-label="Loading Turning Point Results">
+      <div class="splash-content">
+        <div class="splash-brand">
+          <div class="splash-logo" aria-hidden="true">
+            <img src="data:image/png;base64,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" alt="" width="68" height="68" />
+          </div>
+          <div class="splash-wordmark">
+            <h1>Turning Point</h1>
+            <span>RESULTS</span>
+          </div>
+        </div>
+        <p class="splash-tagline">School performance, made clear.</p>
+        <div class="splash-progress" aria-hidden="true"><span></span></div>
+        <p class="splash-status">Preparing your workspace</p>
+      </div>
+    </div>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand-panel">
+          <div class="brand-icon">🎓</div>
+          <div>
+            <h1>Turning Point</h1>
+            <p>School Result Management System</p>
+          </div>
+          <button class="theme-toggle" type="button" aria-label="Switch to dark mode" title="Switch to dark mode">
+            <span class="theme-toggle-icon" aria-hidden="true">☾</span>
+          </button>
+          <button class="menu-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="primary-navigation">
+            <span class="hamburger-icon" aria-hidden="true"><i></i><i></i><i></i></span>
+          </button>
+        </div>
+
+        <nav class="nav" id="primary-navigation">
+          <button class="nav-item active" data-page="dashboard">
+            <span>🏠</span>
+            <span>Dashboard</span>
+          </button>
+          <button class="nav-item" data-page="classes">
+            <span>📚</span>
+            <span>My Classes</span>
+          </button>
+          <button class="nav-item" data-page="my-subjects" data-teacher-only hidden>
+            <span>📖</span>
+            <span>My Subjects</span>
+          </button>
+          <button class="nav-item" data-page="students">
+            <span>🧑‍🎓</span>
+            <span>Student Register</span>
+          </button>
+          <button class="nav-item" data-page="scores">
+            <span>📝</span>
+            <span>Enter Scores</span>
+          </button>
+          <button class="nav-item" data-page="master">
+            <span>📊</span>
+            <span>Master Sheets</span>
+          </button>
+          <button class="nav-item" data-page="results">
+            <span>📄</span>
+            <span>Student Results</span>
+          </button>
+          <button class="nav-item" data-page="reports">
+            <span>📈</span>
+            <span>Reports</span>
+          </button>
+          <button class="nav-item" data-page="permissions" data-admin-only hidden>
+            <span>🛡️</span>
+            <span>Permissions</span>
+          </button>
+          <button class="nav-item" data-page="management" data-admin-only hidden>
+            <span>👥</span>
+            <span>Teachers & Subjects</span>
+          </button>
+          <button class="nav-item" data-page="settings" data-admin-only hidden>
+            <span>⚙️</span>
+            <span>Sessions & Settings</span>
+          </button>
+          <button class="nav-item nav-sign-out" type="button" data-menu-sign-out hidden>
+            <span>↪</span>
+            <span>Sign out</span>
+          </button>
+        </nav>
+      </aside>
+
+      <main class="main-panel">
+        <header class="topbar">
+          <div class="topbar-left">
+            <div class="page-badge">EduResults</div>
+            <div class="page-title-wrap">
+              <h2 id="page-title">Dashboard</h2>
+              <span id="page-subtitle">Welcome back, Admin</span>
+            </div>
+          </div>
+
+          <div class="user-panel" hidden>
+            <div class="user-avatar" id="user-avatar">?</div>
+            <div class="user-meta">
+              <strong id="user-name">Sign in required</strong>
+              <small id="user-role">Supabase authentication</small>
+            </div>
+            <button class="sign-out-button" type="button" data-auth-action>Sign in</button>
+          </div>
+        </header>
+
+        <div class="page-view active" data-view="dashboard">
+        <section class="overview-grid" data-live-dashboard>
+          <div class="metric-card accent-blue">
+            <div class="metric-icon">👨‍🏫</div>
+            <div>
+              <label>Total Teachers</label>
+              <strong data-metric="teachers">—</strong>
+            </div>
+          </div>
+          <div class="metric-card accent-cyan">
+            <div class="metric-icon">👩‍🎓</div>
+            <div>
+              <label>Total Students</label>
+              <strong data-metric="students">—</strong>
+            </div>
+          </div>
+          <div class="metric-card accent-orange">
+            <div class="metric-icon">🏫</div>
+            <div>
+              <label>Total Classes</label>
+              <strong data-metric="classes">—</strong>
+            </div>
+          </div>
+          <div class="metric-card accent-green">
+            <div class="metric-icon">📝</div>
+            <div>
+              <label>Pending Results</label>
+              <strong data-metric="pending-results">—</strong>
+            </div>
+          </div>
+        </section>
+        <section class="panel teacher-dashboard-classes" data-teacher-only hidden>
+          <div class="panel-header">
+            <div><h3>My Assigned Classes</h3><p class="muted-text">Classes assigned to you for the current academic session.</p></div>
+            <button class="btn-small" type="button" data-go="classes">View all</button>
+          </div>
+          <div class="class-cards" data-dashboard-class-cards><p class="muted-text">Loading assigned classes…</p></div>
+        </section>
+        </div>
+
+        <section class="page-view" data-view="classes" hidden>
+          <div class="page-heading">
+            <div><h2>My Classes</h2><p>Classes assigned to you for the current academic session.</p></div>
+            <button class="btn-primary compact" data-go="settings" data-admin-only hidden>+ Add class</button>
+          </div>
+          <div class="demo-notice" data-class-notice hidden></div>
+          <div class="overview-grid three" hidden>
+            <article class="metric-card"><div class="metric-icon">🏫</div><div><label>Assigned classes</label><strong>4</strong></div></article>
+            <article class="metric-card"><div class="metric-icon">👩‍🎓</div><div><label>Total students</label><strong>126</strong></div></article>
+            <article class="metric-card"><div class="metric-icon">📝</div><div><label>Results to review</label><strong>2</strong></div></article>
+          </div>
+          <div class="class-cards" data-live-class-cards><p class="muted-text">Loading classes…</p></div>
+        </section>
+
+        <section class="page-view" data-view="my-subjects" hidden>
+          <div class="page-heading">
+            <div><h2>My Subjects</h2><p>Subjects and classes assigned to you for score entry.</p></div>
+          </div>
+          <div class="demo-notice" data-subjects-notice hidden></div>
+          <div class="class-cards" data-live-subject-cards><p class="muted-text">Loading subjects…</p></div>
+        </section>
+
+        <section class="page-view" data-view="students" hidden>
+          <div class="page-heading">
+            <div><h2>Student Register</h2><p data-student-context>Select a class and academic session to view its register.</p></div>
+            <button class="btn-primary compact" data-open-student-form>+ Register student</button>
+          </div>
+          <div class="demo-notice" data-student-notice hidden></div>
+          <div class="panel">
+            <div class="toolbar">
+              <label class="search-field"><span>⌕</span><input type="search" placeholder="Search student name or admission number" data-filter="students-table"></label>
+              <div class="toolbar-controls">
+                <select id="student-class-select" aria-label="Select class"></select>
+                <select id="student-session-select" aria-label="Select academic session"></select>
+                <button class="ghost-btn" type="button" data-export-students>Export list</button>
+              </div>
+            </div>
+            <div class="table-wrap"><table class="data-table" id="students-table"><thead><tr><th>S/N</th><th>Student</th><th>Admission number</th><th>Gender</th><th>Enrolment</th><th>Status</th><th>Actions</th></tr></thead><tbody></tbody></table></div>
+            <div class="table-footer"><span data-student-count>Loading students…</span></div>
+          </div>
+        </section>
+
+        <dialog class="form-dialog" id="student-dialog" aria-labelledby="student-dialog-title">
+          <form id="student-form" method="dialog">
+            <div class="panel-header">
+              <div><h3 id="student-dialog-title">Register student</h3><p class="muted-text">Student and class enrollment will be saved together.</p></div>
+              <button class="login-close" type="button" aria-label="Close" data-close-student-dialog>×</button>
+            </div>
+            <div class="form-grid">
+              <label>First name<input name="first_name" maxlength="80" required></label>
+              <label>Last name<input name="last_name" maxlength="80" required></label>
+              <label>Other names<input name="other_names" maxlength="160"></label>
+              <label>Admission number<input name="admission_number" maxlength="40" required></label>
+              <label>Gender<select name="gender"><option value="">Not specified</option><option value="female">Female</option><option value="male">Male</option><option value="other">Other</option><option value="undisclosed">Prefer not to say</option></select></label>
+              <label>Date of birth<input name="date_of_birth" type="date"></label>
+            </div>
+            <p class="form-message" data-student-form-message role="status" aria-live="polite"></p>
+            <div class="header-actions"><button class="ghost-btn" type="button" data-close-student-dialog>Cancel</button><button class="btn-primary" type="submit">Save student</button></div>
+          </form>
+        </dialog>
+
+        <section class="page-view" data-view="scores" hidden>
+          <div class="page-heading"><div><h2>Enter Scores</h2><p>Record subject assessment scores for students in your assigned class.</p></div></div>
+          <div class="demo-notice" data-scores-notice hidden></div>
+          <div class="panel">
+            <div class="filter-grid">
+              <label>Class<select id="score-class-select"></select></label>
+              <label>Session<select id="score-session-select"></select></label>
+              <label>Term<select id="score-term-select"></select></label>
+              <label>Subject<select id="score-subject-select"></select></label>
+            </div>
+            <div class="score-summary"><span data-score-scheme>Choose a class, session, term, and subject to load the assessment scheme.</span><span class="badge info">Scores are validated and saved by Supabase</span></div>
+            <div class="table-wrap"><table class="data-table score-entry-table"><thead data-score-head></thead><tbody data-score-body></tbody></table></div>
+            <div class="score-actions"><span class="form-message" data-score-message aria-live="polite"></span><div><button class="ghost-btn" type="button" data-save-scores>Save draft</button><button class="btn-primary compact" type="button" data-submit-scores>Submit results</button></div></div>
+          </div>
+        </section>
+
+        <section class="page-view" data-view="master" hidden>
+          <div class="page-heading"><div><h2>Term Master Sheet</h2><p data-master-context>Select a class, session, and term.</p></div><div class="toolbar-controls"><button class="ghost-btn" data-print>Print master sheet</button><button class="btn-primary compact" type="button" data-export-master>Export CSV</button></div></div>
+          <div class="demo-notice" data-master-notice hidden></div>
+          <div class="panel">
+            <div class="filter-grid compact-filters"><label>Class<select id="master-class-select"></select></label><label>Session<select id="master-session-select"></select></label><label>Term<select id="master-term-select"></select></label></div>
+            <div class="master-school-heading"><div class="school-mark">🎓</div><div><strong>EDURESULTS</strong><span data-master-heading>LIVE CLASS PERFORMANCE</span></div><span class="badge info" data-master-status>Live data</span></div>
+            <div class="table-wrap master-table-wrap">
+              <table class="master-table"><thead data-master-head></thead><tbody data-master-body></tbody></table>
+            </div>
+            <div class="class-statistics" data-master-statistics></div>
+          </div>
+        </section>
+
+        <section class="page-view" data-view="results" hidden>
+          <div class="page-heading"><div><h2>Student Result</h2><p>View a student's term performance and subject breakdown.</p></div><button class="ghost-btn" data-print>Print result</button></div>
+          <div class="demo-notice" data-result-notice hidden></div>
+          <div class="filter-grid compact-filters"><label>Class<select id="result-class-select"></select></label><label>Session<select id="result-session-select"></select></label><label>Term<select id="result-term-select"></select></label><label>Student<select id="result-student-select"></select></label></div>
+          <div class="panel result-profile"><div class="profile-avatar" data-result-avatar>?</div><div class="profile-info"><h3 data-result-name>Select a student</h3><p data-result-admission>Select a class and student to view a result.</p><span class="badge muted" data-result-status>No result selected</span></div></div>
+          <div class="overview-grid three result-metrics"><article class="metric-card"><div><label>Grand total</label><strong data-result-total>—</strong></div></article><article class="metric-card"><div><label>Average score</label><strong data-result-average>—</strong></div></article><article class="metric-card"><div><label>Class position</label><strong data-result-position>—</strong></div></article></div>
+          <div class="panel"><div class="panel-header"><h3>Subject performance</h3><span class="muted-text" data-result-context></span></div><div class="table-wrap"><table class="data-table"><thead data-result-head></thead><tbody data-result-body></tbody></table></div></div>
+        </section>
+
+        <section class="page-view" data-view="reports" hidden>
+          <div class="page-heading"><div><h2>Reports & Exports</h2><p>Choose a report and scope to prepare a school report.</p></div></div>
+          <div class="report-grid">
+            <article class="panel report-card"><span class="report-icon blue">▤</span><h3>Term master sheet</h3><p>Full class performance with subject scores, grades, averages and positions.</p><button class="btn-small" data-go="master">Open report</button></article>
+            <article class="panel report-card"><span class="report-icon teal">◉</span><h3>Student term results</h3><p>Individual student results for a selected term and academic session.</p><button class="btn-small" data-go="results">Open report</button></article>
+            <article class="panel report-card"><span class="report-icon orange">⚑</span><h3>Missing scores</h3><p>Find incomplete or unsubmitted scores for assigned classes and subjects.</p><button class="btn-small" data-go="master">View report</button></article>
+            <article class="panel report-card"><span class="report-icon pink">▥</span><h3>Class performance</h3><p>Review class averages and subject-level performance summaries.</p><button class="btn-small" data-go="master">View summary</button></article>
+            <article class="panel report-card"><span class="report-icon green">✓</span><h3>Submission status</h3><p>Monitor draft, submitted, approved and locked results by class.</p><button class="btn-small" data-go="master">View status</button></article>
+            <article class="panel report-card"><span class="report-icon purple">◷</span><h3>Activity & audit log</h3><p>Review recent account, score and approval activity.</p><button class="btn-small" data-go="master">View activity</button></article>
+          </div>
+          <div class="panel report-filter"><div class="panel-header"><h3>Prepare a report</h3></div><div class="filter-grid"><label>Report type<select><option>Class term master sheet</option><option>Individual student result</option><option>Missing scores</option><option>Submission status</option></select></label><label>Class<select><option>JSS 1A</option><option>JSS 2B</option></select></label><label>Academic session<select><option>2026/2027</option><option>2025/2026</option></select></label><label>Term<select><option>First Term</option><option>Second Term</option><option>Third Term</option></select></label></div><button class="btn-primary compact" data-go="master">Preview report</button></div>
+        </section>
+
+        <section class="page-view" data-view="permissions" hidden>
+          <div class="page-heading"><div><h2>Permissions</h2><p>Grant or deny live access for each teacher.</p></div><button class="btn-primary compact" data-save-permissions>Save permissions</button></div>
+          <div class="panel">
+            <label>Teacher<select data-permission-teacher required></select></label>
+            <div class="role-tabs" role="tablist"><button class="role-tab active" role="tab" aria-selected="true" data-role="secondary-subject">Secondary Subject</button><button class="role-tab" role="tab" aria-selected="false" data-role="secondary-class">Secondary Class</button><button class="role-tab" role="tab" aria-selected="false" data-role="primary">Primary / Nursery</button></div>
+            <div class="permission-summary"><span class="role-large-icon">🛡️</span><div><strong id="permission-role-title">Secondary School — Subject Teacher</strong><p id="permission-role-description">Access is limited to assigned classes and subjects.</p></div></div>
+            <div class="permission-list">
+              <label><span><strong>Manage assigned class register</strong><small>Register and manage students within assigned classes.</small></span><input type="checkbox" data-permission-key="register.manage"></label>
+              <label><span><strong>View assigned results</strong><small>View compiled results within the teacher's assigned scope.</small></span><input type="checkbox" data-permission-key="results.read"></label>
+              <label><span><strong>Enter and edit assigned scores</strong><small>Edit scores while results are in an editable status.</small></span><input type="checkbox" data-permission-key="results.edit"></label>
+            </div>
+            <p class="form-message" data-permission-message role="status" aria-live="polite"></p>
+            <div class="inline-notice">These permissions are saved to Supabase and enforced for the selected teacher. Assignments still limit the classes and subjects they can access.</div>
+          </div>
+        </section>
+
+        <section class="page-view" data-view="management" data-admin-only hidden>
+          <div class="page-heading"><div><h2>Teachers & Subjects</h2><p>Live teacher profiles and subject offerings.</p></div></div>
+          <div class="demo-notice" data-management-notice hidden></div>
+          <div class="management-tabs"><button class="management-tab active" data-panel="teachers-panel">Teachers</button><button class="management-tab" data-panel="subjects-panel">Subjects</button><button class="management-tab" data-panel="classes-panel">Classes</button></div>
+          <div class="panel management-panel" id="teachers-panel">
+            <div class="inline-notice">Only administrators can create, edit, reset passwords, deactivate, and assign teachers. Passwords are protected by Supabase Auth and are never stored in the school profile.</div>
+            <form class="admin-management-form" data-teacher-invite-form data-admin-only hidden>
+              <label>Teacher name<input name="full_name" maxlength="160" required></label>
+              <label>Email address<input name="email" type="email" required></label>
+              <label>Initial password<span class="password-input-wrap"><input name="password" type="password" minlength="8" autocomplete="new-password" required><button class="password-toggle" type="button" aria-label="Show password" aria-pressed="false" data-password-toggle><span class="eye-icon" aria-hidden="true"></span></button></span></label>
+              <label>Confirm password<span class="password-input-wrap"><input name="confirm_password" type="password" minlength="8" autocomplete="new-password" required><button class="password-toggle" type="button" aria-label="Show password" aria-pressed="false" data-password-toggle><span class="eye-icon" aria-hidden="true"></span></button></span></label>
+              <fieldset class="role-options"><legend>Roles</legend><label><input type="checkbox" name="roles" value="secondary_subject_teacher"> Secondary subject teacher</label><label><input type="checkbox" name="roles" value="secondary_class_teacher"> Secondary class teacher</label><label><input type="checkbox" name="roles" value="primary_teacher"> Primary teacher</label><label><input type="checkbox" name="roles" value="nursery_teacher"> Nursery teacher</label></fieldset>
+              <label>Class teacher classes (optional)<select name="class_id" data-create-class-select multiple></select></label>
+              <label>Class teacher academic session (required when classes are selected)<select name="academic_session_id" data-create-session-select></select></label>
+              <label>Assignment term (required when classes or subjects are selected)<select name="term_id" data-create-term-select></select></label>
+              <label>Subject teacher subjects / classes (optional)<select name="class_subject_offering_id" data-create-offering-select multiple></select></label>
+              <small class="muted-text">Select all class and subject assignments before creating the account. The teacher will appear in the list immediately after saving.</small>
+              <button class="btn-primary compact" type="submit">Create teacher account</button>
+            </form>
+            <p class="form-message" data-teacher-invite-message role="status" aria-live="polite"></p>
+            <div class="table-wrap"><table class="data-table" id="teachers-table"><thead><tr><th>Teacher</th><th>Role</th><th>Assignments</th><th>Status</th><th data-admin-only hidden>Admin actions</th></tr></thead><tbody data-teachers-body></tbody></table></div>
+          </div>
+          <div class="panel management-panel" id="subjects-panel" hidden>
+            <div class="panel-header"><h3>Subjects offered</h3><span class="muted-text">Assessment components are configured once for each school section.</span></div>
+            <form class="admin-management-form" data-subject-offering-form data-admin-only hidden>
+              <label>School level<select name="class_group" data-offering-class-group required>
+                <option value="junior_secondary">Junior Secondary (JSS 1–3)</option>
+                <option value="senior_secondary">Senior Secondary (SSS 1–3)</option>
+                <option value="upper_basic">Upper Basic (Basic 4–6)</option>
+                <option value="lower_basic">Lower Basic (Basic 1–3)</option>
+                <option value="nursery">Nursery (Nursery 1–3)</option>
+                <option value="pre_nursery">Pre-nursery</option>
+              </select></label>
+              <label>Academic session<select name="academic_session_id" data-offering-session required></select></label>
+              <label>Subject name<input name="subject_name" maxlength="120" placeholder="Mathematics" required></label>
+              <button class="btn-primary compact" type="submit">Add subject to all classes in level</button>
+              <p class="form-message" data-subject-offering-message role="status" aria-live="polite"></p>
+            </form>
+            <div class="table-wrap"><table class="data-table subjects-table"><thead><tr><th>Subject</th><th>Class</th><th>Session</th><th>Status</th><th data-admin-only hidden>Admin actions</th></tr></thead><tbody data-subjects-body></tbody></table></div>
+          </div>
+          <div class="panel management-panel" id="classes-panel" hidden><div class="panel-header"><h3>School classes</h3><span class="muted-text">Edit, archive, or restore classes</span></div><div class="class-cards" data-management-class-list></div></div>
+        </section>
+
+        <section class="page-view" data-view="settings" data-admin-only hidden>
+          <div class="page-heading"><div><h2>Sessions & Settings</h2><p>Set up the school year and classes used by the student register.</p></div></div>
+          <div class="settings-grid">
+            <div class="panel">
+              <div class="panel-header"><div><h3>Academic sessions</h3><p class="muted-text">Sessions and their three terms are saved to Supabase.</p></div><button class="btn-small" type="button" data-open-session-form data-admin-only hidden>+ Add session</button></div>
+              <div data-session-list><p class="muted-text">Loading sessions…</p></div>
+              <p class="form-message" data-session-message role="status" aria-live="polite"></p>
+            </div>
+            <div class="panel">
+              <div class="panel-header"><div><h3>School classes</h3><p class="muted-text">Classes are shared by the student register and teacher assignments.</p></div><button class="btn-small" type="button" data-open-class-form data-admin-only hidden>+ Add class</button></div>
+              <div data-school-class-list><p class="muted-text">Loading classes…</p></div>
+              <p class="form-message" data-class-message role="status" aria-live="polite"></p>
+            </div>
+            <div class="panel" data-admin-only hidden>
+              <div class="panel-header"><div><h3>Section-wide assessment scheme</h3><p class="muted-text">Secondary uses its own scheme. Primary and Nursery share the same 1st assessment, 2nd assessment, and Exam scheme across all sessions.</p></div></div>
+              <form id="section-assessment-form">
+                <div class="form-grid">
+                  <label>School section<select name="stage" data-section-assessment-select required><option value="secondary">Secondary</option><option value="primary">Primary</option><option value="nursery">Nursery</option></select></label>
+                  <label>CA label<input name="ca_name" maxlength="80" value="Continuous assessment" required></label>
+                  <label>CA maximum score<input name="ca_max" type="number" min="0.01" step="0.01" value="20" required></label>
+                  <label>Test label<input name="test_name" maxlength="80" value="Test" required></label>
+                  <label>Test maximum score<input name="test_max" type="number" min="0.01" step="0.01" value="20" required></label>
+                  <label>Exam label<input name="exam_name" maxlength="80" value="Examination" required></label>
+                  <label>Exam maximum score<input name="exam_max" type="number" min="0.01" step="0.01" value="60" required></label>
+                </div>
+                <p class="muted-text">Previously saved results keep their original assessment components. Updating a scheme is blocked while that section has draft results.</p>
+                <p class="form-message" data-section-assessment-message role="status" aria-live="polite"></p>
+                <div class="header-actions">
+                  <button class="btn-primary compact" type="submit">Save section assessment</button>
+                  <button class="btn-small danger-action" type="button" data-delete-section-assessment disabled>Delete saved scheme</button>
+                </div>
+              </form>
+            </div>
+            <div class="panel grading-panel" data-admin-only hidden>
+              <div class="panel-header"><div><h3>Grading scale</h3><p class="muted-text">Set the grades used to calculate student results.</p></div><button class="btn-small" type="button" data-add-grade>+ Add grade</button></div>
+              <label>Scale name<input type="text" maxlength="120" data-grading-scale-name placeholder="School grading scale"></label>
+              <div class="table-wrap"><table class="data-table"><thead><tr><th>Grade</th><th>Minimum score</th><th>Maximum score</th><th>Remark</th><th>Actions</th></tr></thead><tbody data-grading-bands-body></tbody></table></div>
+              <p class="form-message" data-grading-message role="status" aria-live="polite"></p>
+              <button class="btn-primary compact" type="button" data-save-grading-scale>Save grading scale</button>
+            </div>
+          </div>
+        </section>
+
+        <dialog class="form-dialog" id="session-dialog" aria-labelledby="session-dialog-title">
+          <form id="session-form">
+            <div class="panel-header"><div><h3 id="session-dialog-title">Add academic session</h3><p class="muted-text">Three terms will be created with the session.</p></div><button class="login-close" type="button" aria-label="Close" data-close-session-dialog>×</button></div>
+            <div class="form-grid">
+              <label>Session name<input name="name" placeholder="2026/2027" maxlength="20" required></label>
+              <label>Starts on<input name="starts_on" type="date" required></label>
+              <label>Ends on<input name="ends_on" type="date" required></label>
+              <label>Current term<select name="active_term" required><option value="1">First Term</option><option value="2">Second Term</option><option value="3">Third Term</option></select></label>
+              <label class="remember-row"><input name="make_current" type="checkbox" checked> Set as current session</label>
+            </div>
+            <p class="form-message" data-session-form-message role="status" aria-live="polite"></p>
+            <div class="header-actions"><button class="ghost-btn" type="button" data-close-session-dialog>Cancel</button><button class="btn-primary" type="submit">Save session</button></div>
+          </form>
+        </dialog>
+
+        <dialog class="form-dialog" id="session-edit-dialog" aria-labelledby="session-edit-title">
+          <form id="session-edit-form">
+            <div class="panel-header"><div><h3 id="session-edit-title">Edit academic session</h3></div><button class="login-close" type="button" aria-label="Close" data-close-session-edit>×</button></div>
+            <input name="id" type="hidden">
+            <div class="form-grid">
+              <label>Session name<input name="name" maxlength="20" required></label>
+              <label>Starts on<input name="starts_on" type="date" required></label>
+              <label>Ends on<input name="ends_on" type="date" required></label>
+              <label>Current term<select name="active_term" required><option value="1">First Term</option><option value="2">Second Term</option><option value="3">Third Term</option></select></label>
+              <label class="remember-row"><input name="make_current" type="checkbox"> Set as current session</label>
+            </div>
+            <p class="form-message" data-session-edit-message role="status" aria-live="polite"></p>
+            <div class="header-actions"><button class="ghost-btn" type="button" data-close-session-edit>Cancel</button><button class="btn-primary" type="submit">Save changes</button></div>
+          </form>
+        </dialog>
+
+        <dialog class="form-dialog" id="class-dialog" aria-labelledby="class-dialog-title">
+          <form id="class-form">
+            <div class="panel-header"><div><h3 id="class-dialog-title">Add school class</h3><p class="muted-text">Choose the stage that matches this class.</p></div><button class="login-close" type="button" aria-label="Close" data-close-class-dialog>×</button></div>
+            <div class="form-grid">
+              <label>Class name<input name="name" placeholder="JSS 1A" maxlength="80" required></label>
+              <label>School stage<select name="stage" required><option value="secondary">Secondary</option><option value="primary">Primary</option><option value="nursery">Nursery</option></select></label>
+            </div>
+            <p class="form-message" data-class-form-message role="status" aria-live="polite"></p>
+            <div class="header-actions"><button class="ghost-btn" type="button" data-close-class-dialog>Cancel</button><button class="btn-primary" type="submit">Save class</button></div>
+          </form>
+        </dialog>
+
+        <dialog class="form-dialog" id="class-edit-dialog" aria-labelledby="class-edit-title">
+          <form id="class-edit-form">
+            <div class="panel-header"><div><h3 id="class-edit-title">Edit school class</h3></div><button class="login-close" type="button" aria-label="Close" data-close-class-edit>×</button></div>
+            <input name="id" type="hidden">
+            <div class="form-grid">
+              <label>Class name<input name="name" maxlength="80" required></label>
+              <label>School stage<select name="stage" required><option value="secondary">Secondary</option><option value="primary">Primary</option><option value="nursery">Nursery</option></select></label>
+            </div>
+            <p class="form-message" data-class-edit-message role="status" aria-live="polite"></p>
+            <div class="header-actions"><button class="ghost-btn" type="button" data-close-class-edit>Cancel</button><button class="btn-primary" type="submit">Save changes</button></div>
+          </form>
+        </dialog>
+
+        <dialog class="form-dialog" id="teacher-edit-dialog" aria-labelledby="teacher-edit-title">
+          <form id="teacher-edit-form">
+            <div class="panel-header"><div><h3 id="teacher-edit-title">Edit teacher</h3></div><button class="login-close" type="button" aria-label="Close" data-close-teacher-edit>×</button></div>
+            <input name="id" type="hidden">
+            <div class="form-grid">
+              <label>Full name<input name="full_name" maxlength="160" required></label>
+              <label>New password (optional)<span class="password-input-wrap"><input name="password" type="password" minlength="8" autocomplete="new-password"><button class="password-toggle" type="button" aria-label="Show password" aria-pressed="false" data-password-toggle><span class="eye-icon" aria-hidden="true"></span></button></span><small class="muted-text">Leave blank to keep the current password.</small></label>
+              <label>Confirm new password<span class="password-input-wrap"><input name="confirm_password" type="password" minlength="8" autocomplete="new-password"><button class="password-toggle" type="button" aria-label="Show password" aria-pressed="false" data-password-toggle><span class="eye-icon" aria-hidden="true"></span></button></span></label>
+              <fieldset class="role-options"><legend>Roles</legend><label><input type="checkbox" name="roles" value="secondary_subject_teacher"> Secondary subject teacher</label><label><input type="checkbox" name="roles" value="secondary_class_teacher"> Secondary class teacher</label><label><input type="checkbox" name="roles" value="primary_teacher"> Primary teacher</label><label><input type="checkbox" name="roles" value="nursery_teacher"> Nursery teacher</label></fieldset>
+            </div>
+            <p class="form-message" data-teacher-edit-message role="status" aria-live="polite"></p>
+            <div class="header-actions"><button class="ghost-btn" type="button" data-close-teacher-edit>Cancel</button><button class="btn-primary" type="submit">Save changes</button></div>
+          </form>
+        </dialog>
+
+        <dialog class="form-dialog" id="password-setup-dialog" aria-labelledby="password-setup-title">
+          <form id="password-setup-form">
+            <div class="panel-header"><div><h3 id="password-setup-title">Set your password</h3><p class="muted-text">Choose a password to finish activating your school account.</p></div></div>
+            <label>New password<span class="password-input-wrap"><input name="password" type="password" minlength="8" autocomplete="new-password" required><button class="password-toggle" type="button" aria-label="Show password" aria-pressed="false" data-password-toggle><span class="eye-icon" aria-hidden="true"></span></button></span></label>
+            <label>Confirm password<span class="password-input-wrap"><input name="confirm_password" type="password" minlength="8" autocomplete="new-password" required><button class="password-toggle" type="button" aria-label="Show password" aria-pressed="false" data-password-toggle><span class="eye-icon" aria-hidden="true"></span></button></span></label>
+            <p class="form-message" data-password-setup-message role="status" aria-live="polite"></p>
+            <button class="btn-primary" type="submit">Save password</button>
+          </form>
+        </dialog>
+
+        <section class="content-grid">
+          <div class="panel large-panel">
+            <div class="panel-header">
+              <h3>Recent Activity</h3>
+              <button class="ghost-btn">View all</button>
+            </div>
+
+            <ul class="activity-list">
+              <li>
+                <span class="dot blue"></span>
+                <div>
+                  <strong>Mathematics scores entered</strong>
+                  <small>JSS 1A • 2 minutes ago</small>
+                </div>
+              </li>
+              <li>
+                <span class="dot green"></span>
+                <div>
+                  <strong>New class teacher assigned</strong>
+                  <small>JSS 2B • 41 minutes ago</small>
+                </div>
+              </li>
+              <li>
+                <span class="dot orange"></span>
+                <div>
+                  <strong>Term result approved</strong>
+                  <small>Primary 5 • 1 hour ago</small>
+                </div>
+              </li>
+              <li>
+                <span class="dot teal"></span>
+                <div>
+                  <strong>Students promoted to next session</strong>
+                  <small>School records • 2 hours ago</small>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <div class="panel side-panel">
+            <div class="panel-header">
+              <h3>Your Role</h3>
+            </div>
+
+            <div class="role-tiles">
+              <div class="role-tile">
+                <span>👑</span>
+                <p>Administrator / Management</p>
+                <small>Full administrative control of the system.</small>
+              </div>
+              <div class="role-tile">
+                <span>📘</span>
+                <p>Secondary School - Subject Teacher</p>
+                <small>Manage assigned subjects and classes.</small>
+              </div>
+              <div class="role-tile">
+                <span>🧾</span>
+                <p>Secondary School - Class Teacher</p>
+                <small>Review and monitor class results.</small>
+              </div>
+              <div class="role-tile">
+                <span>🎒</span>
+                <p>Primary / Nursery Teacher</p>
+                <small>Manage all subjects for the assigned class.</small>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="dashboard-grid">
+          <div class="panel class-panel">
+            <div class="panel-header">
+              <h3>JSS 1A - Class Register</h3>
+              <button class="btn-small">Add student</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Student Name</th>
+                    <th>Gender</th>
+                    <th>Admission No.</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>1</td><td>Chiamaka Duru</td><td>Female</td><td>AD/2026/001</td><td><span class="badge success">Active</span></td></tr>
+                  <tr><td>2</td><td>David Okafor</td><td>Male</td><td>AD/2026/002</td><td><span class="badge success">Active</span></td></tr>
+                  <tr><td>3</td><td>Aisha Bello</td><td>Female</td><td>AD/2026/003</td><td><span class="badge warning">Pending</span></td></tr>
+                  <tr><td>4</td><td>Matthew Iwe</td><td>Male</td><td>AD/2026/004</td><td><span class="badge success">Active</span></td></tr>
+                  <tr><td>5</td><td>Sarah Dike</td><td>Female</td><td>AD/2026/005</td><td><span class="badge success">Active</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="panel subject-panel">
+            <div class="panel-header">
+              <h3>Enter Scores</h3>
+              <button class="btn-small secondary">Save draft</button>
+            </div>
+            <div class="score-form">
+              <div class="form-row">
+                <label>Class</label>
+                <select><option>JSS 1A</option></select>
+              </div>
+              <div class="form-row">
+                <label>Subject</label>
+                <select><option>Mathematics</option></select>
+              </div>
+              <div class="score-grid">
+                <div><label>CA</label><input value="10" /></div>
+                <div><label>Test</label><input value="15" /></div>
+                <div><label>Class Work</label><input value="25" /></div>
+                <div><label>Exam</label><input value="60" /></div>
+                <div><label>Total</label><input value="85" /></div>
+                <div><label>Grade</label><input value="A" /></div>
+              </div>
+              <button class="btn-primary">Submit scores</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="master-grid">
+          <div class="panel master-panel">
+            <div class="panel-header">
+              <h3>JSS 1A - First Term Master Sheet</h3>
+              <div class="header-actions">
+                <button class="ghost-btn">Print</button>
+                <button class="btn-small">Export</button>
+              </div>
+            </div>
+
+            <div class="table-wrap master-table-wrap">
+              <table class="master-table">
+                <thead>
+                  <tr>
+                    <th rowspan="2">S/N</th>
+                    <th rowspan="2">Student</th>
+                    <th colspan="6">Mathematics</th>
+                    <th colspan="6">English</th>
+                    <th colspan="6">Basic Science</th>
+                    <th rowspan="2">Total</th>
+                    <th rowspan="2">Average</th>
+                    <th rowspan="2">Position</th>
+                  </tr>
+                  <tr>
+                    <th>CA</th><th>Test</th><th>Work</th><th>Exam</th><th>Total</th><th>Grade</th>
+                    <th>CA</th><th>Test</th><th>Work</th><th>Exam</th><th>Total</th><th>Grade</th>
+                    <th>CA</th><th>Test</th><th>Work</th><th>Exam</th><th>Total</th><th>Grade</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>1</td><td>Chiamaka Duru</td>
+                    <td>10</td><td>15</td><td>25</td><td>60</td><td>85</td><td>A</td>
+                    <td>8</td><td>12</td><td>20</td><td>58</td><td>78</td><td>B</td>
+                    <td>9</td><td>14</td><td>23</td><td>62</td><td>85</td><td>A</td>
+                    <td>248</td><td>82.7</td><td>1</td>
+                  </tr>
+                  <tr>
+                    <td>2</td><td>David Okafor</td>
+                    <td>9</td><td>12</td><td>21</td><td>52</td><td>73</td><td>B</td>
+                    <td>7</td><td>11</td><td>18</td><td>48</td><td>66</td><td>C</td>
+                    <td>8</td><td>13</td><td>21</td><td>50</td><td>71</td><td>B</td>
+                    <td>210</td><td>70.0</td><td>3</td>
+                  </tr>
+                  <tr>
+                    <td>3</td><td>Aisha Bello</td>
+                    <td>8</td><td>10</td><td>18</td><td>47</td><td>65</td><td>C</td>
+                    <td>9</td><td>13</td><td>22</td><td>51</td><td>73</td><td>B</td>
+                    <td>7</td><td>12</td><td>19</td><td>46</td><td>65</td><td>C</td>
+                    <td>203</td><td>67.7</td><td>4</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <div class="login-overlay" id="login-overlay">
+          <section class="login-card" aria-labelledby="login-title">
+            <button class="login-close" type="button" aria-label="Close sign-in" data-login-close hidden>×</button>
+            <div class="login-art" aria-hidden="true"><div class="login-art-logo">🎓</div></div>
+            <div class="login-content">
+              <p class="eyebrow">TURNING POINT PORTAL</p>
+              <h2 id="login-title">Sign in</h2>
+              <p class="muted-text">Use the school account created for you by your administrator.</p>
+            <form id="login-form">
+              <label><span>Email</span><span class="login-input-wrap"><span class="login-field-icon">✉</span><input id="login-email" type="email" placeholder="name@school.edu" autocomplete="username" required></span></label>
+              <label><span>Password</span>
+                <span class="password-input-wrap">
+                  <span class="login-field-icon">♙</span>
+                  <input id="login-password" type="password" placeholder="Enter your password" autocomplete="current-password" required>
+                  <button class="password-toggle" type="button" aria-label="Show password" aria-pressed="false" data-password-toggle><span class="eye-icon" aria-hidden="true"></span></button>
+                </span>
+              </label>
+              <p class="auth-message" id="auth-message" role="alert" aria-live="polite"></p>
+              <button class="btn-primary" id="login-submit" type="submit">Sign in</button>
+              <button class="ghost-btn login-signout" type="button" data-session-sign-out hidden>Sign out</button>
+            </form>
+            </div>
+          </section>
+        </div>
+        <div class="toast-message" role="status" aria-live="polite"></div>
+
+      </main>
+    </div>
+
+  </body>
+</html>
