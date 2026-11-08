@@ -110,6 +110,40 @@ document.addEventListener('DOMContentLoaded', () => {
     window.localStorage.setItem('eduresults-theme', nextTheme);
   });
 
+  const gallery = document.querySelector('[data-dashboard-gallery]');
+  if (gallery) {
+    const slides = [...gallery.querySelectorAll('[data-gallery-slide]')];
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let activeSlide = 0;
+    let rotationTimer;
+
+    const showGallerySlide = (index) => {
+      activeSlide = (index + slides.length) % slides.length;
+      slides.forEach((slide, slideIndex) => {
+        const isActive = slideIndex === activeSlide;
+        slide.classList.toggle('is-active', isActive);
+        slide.setAttribute('aria-hidden', String(!isActive));
+        slide.inert = !isActive;
+      });
+    };
+
+    const updateRotation = () => {
+      window.clearInterval(rotationTimer);
+      if (reducedMotion.matches
+        || document.hidden
+        || dashboard.hidden
+        || document.body.classList.contains('auth-required')) return;
+      rotationTimer = window.setInterval(() => showGallerySlide(activeSlide + 1, false), 5000);
+    };
+
+    document.addEventListener('visibilitychange', updateRotation);
+    reducedMotion.addEventListener('change', updateRotation);
+    const galleryObserver = new MutationObserver(updateRotation);
+    galleryObserver.observe(dashboard, { attributes: true, attributeFilter: ['hidden'] });
+    galleryObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    updateRotation();
+  }
+
   ['.content-grid', '.dashboard-grid', '.master-grid'].forEach((selector) => {
     const section = main.querySelector(selector);
     if (section) {

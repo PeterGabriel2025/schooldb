@@ -326,6 +326,10 @@ body.auth-required .exam-setup-banner {
   display: none;
 }
 
+body.auth-required .dashboard-gallery {
+  display: none;
+}
+
 .nav-item {
   border: none;
   background: transparent;
@@ -600,6 +604,173 @@ body.auth-required .exam-setup-banner {
 @keyframes exam-banner-shimmer {
   0%, 35% { transform: translateX(-130%); }
   75%, 100% { transform: translateX(360%); }
+}
+
+.dashboard-gallery {
+  min-width: 0;
+  margin-bottom: 22px;
+  padding: clamp(16px, 2.4vw, 26px);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--card);
+  box-shadow: var(--shadow);
+}
+
+.dashboard-gallery-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.dashboard-gallery-heading > div {
+  min-width: 0;
+}
+
+.dashboard-gallery-eyebrow {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--primary);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.dashboard-gallery-heading h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: clamp(1.2rem, 2.4vw, 1.7rem);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.dashboard-gallery-heading p {
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-size: clamp(0.78rem, 1.2vw, 0.9rem);
+  line-height: 1.5;
+}
+
+.dashboard-gallery-mark {
+  display: grid;
+  flex: 0 0 auto;
+  width: 42px;
+  aspect-ratio: 1;
+  place-items: center;
+  border-radius: 14px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: 1.35rem;
+}
+
+.dashboard-gallery-stage {
+  position: relative;
+  height: clamp(260px, 38vw, 440px);
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: 16px;
+  background: #0b1c31;
+}
+
+.dashboard-gallery-slide {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  margin: 0;
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(1.015);
+  transition:
+    opacity 650ms ease,
+    transform 900ms ease,
+    visibility 0s linear 650ms;
+}
+
+.dashboard-gallery-slide.is-active {
+  z-index: 1;
+  opacity: 1;
+  visibility: visible;
+  transform: scale(1);
+  transition-delay: 0s;
+}
+
+.dashboard-gallery-slide::before {
+  position: absolute;
+  z-index: -1;
+  inset: -18px;
+  background-image: var(--gallery-image);
+  background-position: center;
+  background-size: cover;
+  content: "";
+  filter: blur(18px) brightness(0.48);
+  transform: scale(1.04);
+}
+
+.dashboard-gallery-slide img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  object-fit: contain;
+  object-position: center;
+}
+
+.dashboard-gallery-slide figcaption {
+  position: absolute;
+  z-index: 2;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: grid;
+  gap: 4px;
+  padding: 28px clamp(14px, 3vw, 30px) 16px;
+  background: linear-gradient(transparent, rgba(5, 16, 29, 0.82));
+  color: #fff;
+}
+
+.dashboard-gallery-slide figcaption strong {
+  font-size: clamp(0.95rem, 1.8vw, 1.2rem);
+}
+
+.dashboard-gallery-slide figcaption span {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: clamp(0.72rem, 1.1vw, 0.84rem);
+}
+
+@media (max-width: 520px) {
+  .dashboard-gallery {
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .dashboard-gallery-heading {
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 13px;
+  }
+
+  .dashboard-gallery-mark {
+    width: 34px;
+    border-radius: 11px;
+  }
+
+  .dashboard-gallery-stage {
+    height: clamp(235px, 68vw, 340px);
+    border-radius: 12px;
+  }
+
+  .dashboard-gallery-slide figcaption {
+    padding: 26px 13px 12px;
+  }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-gallery-slide {
+    transition-duration: 0.01ms;
+  }
 }
 
 .metric-card {
