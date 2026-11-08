@@ -29,7 +29,7 @@
     <div class="app-shell">
       <aside class="sidebar">
         <div class="brand-panel">
-          <div class="brand-icon">🎓</div>
+          <div class="brand-icon"><img src="./assets/turning-point-logo.png" alt="" width="42" height="42" /></div>
           <div>
             <h1>Turning Point</h1>
             <p>School Result Management System</p>
@@ -47,6 +47,7 @@
             <span>🏠</span>
             <span>Dashboard</span>
           </button>
+          <span class="nav-section-label">Academic management</span>
           <button class="nav-item" data-page="classes">
             <span>📚</span>
             <span>My Classes</span>
@@ -55,10 +56,16 @@
             <span>📖</span>
             <span>My Subjects</span>
           </button>
+          <button class="nav-item" data-page="management" data-admin-only hidden>
+            <span>👥</span>
+            <span>Teachers & Subjects</span>
+          </button>
+          <span class="nav-section-label">Students</span>
           <button class="nav-item" data-page="students">
             <span>🧑‍🎓</span>
             <span>Student Register</span>
           </button>
+          <span class="nav-section-label">Assessment</span>
           <button class="nav-item" data-page="scores">
             <span>📝</span>
             <span>Enter Scores</span>
@@ -75,14 +82,12 @@
             <span>📈</span>
             <span>Reports</span>
           </button>
+          <span class="nav-section-label" data-admin-only hidden>Administration</span>
           <button class="nav-item" data-page="permissions" data-admin-only hidden>
             <span>🛡️</span>
             <span>Permissions</span>
           </button>
-          <button class="nav-item" data-page="management" data-admin-only hidden>
-            <span>👥</span>
-            <span>Teachers & Subjects</span>
-          </button>
+          <span class="nav-section-label" data-admin-only hidden>Configuration</span>
           <button class="nav-item" data-page="settings" data-admin-only hidden>
             <span>⚙️</span>
             <span>Sessions & Settings</span>
@@ -115,86 +120,86 @@
         </header>
 
         <div class="page-view active" data-view="dashboard">
-        <a
-          class="exam-setup-banner"
-          href="https://snapexamw.netlify.app/"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Click to set up your exam question easily (opens in a new tab)"
-        >
-          <span class="exam-setup-icon" aria-hidden="true">✦</span>
-          <span class="exam-setup-copy">
-            <span class="exam-setup-eyebrow">EXAM QUESTION SETUP</span>
-            <strong>Click to set up your exam question easily</strong>
-            <span>Create and organize exam questions in minutes.</span>
-          </span>
-          <span class="exam-setup-arrow" aria-hidden="true">↗</span>
-        </a>
-        <section class="dashboard-gallery" data-dashboard-gallery aria-labelledby="dashboard-gallery-title">
-          <div class="dashboard-gallery-heading">
-            <div>
-              <span class="dashboard-gallery-eyebrow">OUR SCHOOL COMMUNITY</span>
-              <h3 id="dashboard-gallery-title">Life at Great Turning Point</h3>
-              <p>Learning, confidence, and community—captured in moments that make us proud.</p>
+          <section class="overview-grid" data-live-dashboard>
+            <div class="metric-card accent-blue">
+              <div class="metric-icon">👨‍🏫</div>
+              <div>
+                <label>Total Teachers</label>
+                <strong data-metric="teachers">—</strong>
+              </div>
             </div>
-            <span class="dashboard-gallery-mark" aria-hidden="true">✦</span>
-          </div>
-          <div class="dashboard-gallery-stage" role="group" aria-roledescription="carousel" aria-label="School gallery">
-            <figure class="dashboard-gallery-slide is-active" data-gallery-slide aria-hidden="false" style="--gallery-image: url('/assets/dashboard-gallery/stage-performance-1.png')">
-              <img src="/assets/dashboard-gallery/stage-performance-1.png" alt="A young performer sharing their talent on stage" width="720" height="429" fetchpriority="high">
-              <figcaption><strong>Talent and confidence</strong><span>Celebrating every voice and every gift.</span></figcaption>
-            </figure>
-            <figure class="dashboard-gallery-slide" data-gallery-slide aria-hidden="true" inert style="--gallery-image: url('/assets/dashboard-gallery/stage-performance-2.png')">
-              <img src="/assets/dashboard-gallery/stage-performance-2.png" alt="A young performer speaking confidently into a microphone" width="720" height="397" loading="lazy">
-              <figcaption><strong>Every voice matters</strong><span>Confidence grows when students get the chance to shine.</span></figcaption>
-            </figure>
-            <figure class="dashboard-gallery-slide" data-gallery-slide aria-hidden="true" inert style="--gallery-image: url('/assets/dashboard-gallery/great-turning-point.png')">
-              <img src="/assets/dashboard-gallery/great-turning-point.png" alt="Great Turning Point school emblem in the school community" width="628" height="638" loading="lazy">
-              <figcaption><strong>Great Turning Point</strong><span>Growing together and building bright futures.</span></figcaption>
-            </figure>
-            <figure class="dashboard-gallery-slide" data-gallery-slide aria-hidden="true" inert style="--gallery-image: url('/assets/dashboard-gallery/school-community.png')">
-              <img src="/assets/dashboard-gallery/school-community.png" alt="A teacher walking with students on the school grounds" width="720" height="1280" loading="lazy">
-              <figcaption><strong>Growing together</strong><span>A community that learns, leads, and moves forward together.</span></figcaption>
-            </figure>
-          </div>
-        </section>
-        <section class="overview-grid" data-live-dashboard>
-          <div class="metric-card accent-blue">
-            <div class="metric-icon">👨‍🏫</div>
-            <div>
-              <label>Total Teachers</label>
-              <strong data-metric="teachers">—</strong>
+            <div class="metric-card accent-cyan">
+              <div class="metric-icon">👩‍🎓</div>
+              <div>
+                <label>Total Students</label>
+                <strong data-metric="students">—</strong>
+              </div>
             </div>
-          </div>
-          <div class="metric-card accent-cyan">
-            <div class="metric-icon">👩‍🎓</div>
-            <div>
-              <label>Total Students</label>
-              <strong data-metric="students">—</strong>
+            <div class="metric-card accent-orange">
+              <div class="metric-icon">🏫</div>
+              <div>
+                <label>Total Classes</label>
+                <strong data-metric="classes">—</strong>
+              </div>
             </div>
-          </div>
-          <div class="metric-card accent-orange">
-            <div class="metric-icon">🏫</div>
-            <div>
-              <label>Total Classes</label>
-              <strong data-metric="classes">—</strong>
+            <div class="metric-card accent-green">
+              <div class="metric-icon">📝</div>
+              <div>
+                <label>Pending Results</label>
+                <strong data-metric="pending-results">—</strong>
+              </div>
             </div>
-          </div>
-          <div class="metric-card accent-green">
-            <div class="metric-icon">📝</div>
-            <div>
-              <label>Pending Results</label>
-              <strong data-metric="pending-results">—</strong>
+          </section>
+          <a
+            class="exam-setup-banner"
+            href="https://snapexamw.netlify.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Click to set up your exam question easily (opens in a new tab)"
+          >
+            <span class="exam-setup-icon" aria-hidden="true">✦</span>
+            <span class="exam-setup-copy">
+              <span class="exam-setup-eyebrow">EXAM QUESTION SETUP</span>
+              <strong>Click to set up your exam question easily</strong>
+              <span>Create and organize exam questions in minutes.</span>
+            </span>
+            <span class="exam-setup-arrow" aria-hidden="true">↗</span>
+          </a>
+          <section class="panel teacher-dashboard-classes" data-teacher-only hidden>
+            <div class="panel-header">
+              <div><h3>My Assigned Classes</h3><p class="muted-text">Classes assigned to you for the current academic session.</p></div>
+              <button class="btn-small" type="button" data-go="classes">View all</button>
             </div>
-          </div>
-        </section>
-        <section class="panel teacher-dashboard-classes" data-teacher-only hidden>
-          <div class="panel-header">
-            <div><h3>My Assigned Classes</h3><p class="muted-text">Classes assigned to you for the current academic session.</p></div>
-            <button class="btn-small" type="button" data-go="classes">View all</button>
-          </div>
-          <div class="class-cards" data-dashboard-class-cards><p class="muted-text">Loading assigned classes…</p></div>
-        </section>
+            <div class="class-cards" data-dashboard-class-cards><p class="muted-text">Loading assigned classes…</p></div>
+          </section>
+          <section class="dashboard-gallery" data-dashboard-gallery aria-labelledby="dashboard-gallery-title">
+            <div class="dashboard-gallery-heading">
+              <div>
+                <span class="dashboard-gallery-eyebrow">OUR SCHOOL COMMUNITY</span>
+                <h3 id="dashboard-gallery-title">Life at Great Turning Point</h3>
+                <p>Learning, confidence, and community—captured in moments that make us proud.</p>
+              </div>
+              <span class="dashboard-gallery-mark" aria-hidden="true">✦</span>
+            </div>
+            <div class="dashboard-gallery-stage" role="group" aria-roledescription="carousel" aria-label="School gallery">
+              <figure class="dashboard-gallery-slide is-active" data-gallery-slide aria-hidden="false" style="--gallery-image: url('/assets/dashboard-gallery/stage-performance-1.png')">
+                <img src="/assets/dashboard-gallery/stage-performance-1.png" alt="A young performer sharing their talent on stage" width="720" height="429" fetchpriority="high">
+                <figcaption><strong>Talent and confidence</strong><span>Celebrating every voice and every gift.</span></figcaption>
+              </figure>
+              <figure class="dashboard-gallery-slide" data-gallery-slide aria-hidden="true" inert style="--gallery-image: url('/assets/dashboard-gallery/stage-performance-2.png')">
+                <img src="/assets/dashboard-gallery/stage-performance-2.png" alt="A young performer speaking confidently into a microphone" width="720" height="397" loading="lazy">
+                <figcaption><strong>Every voice matters</strong><span>Confidence grows when students get the chance to shine.</span></figcaption>
+              </figure>
+              <figure class="dashboard-gallery-slide" data-gallery-slide aria-hidden="true" inert style="--gallery-image: url('/assets/dashboard-gallery/great-turning-point.png')">
+                <img src="/assets/dashboard-gallery/great-turning-point.png" alt="Great Turning Point school emblem in the school community" width="628" height="638" loading="lazy">
+                <figcaption><strong>Great Turning Point</strong><span>Growing together and building bright futures.</span></figcaption>
+              </figure>
+              <figure class="dashboard-gallery-slide" data-gallery-slide aria-hidden="true" inert style="--gallery-image: url('/assets/dashboard-gallery/school-community.png')">
+                <img src="/assets/dashboard-gallery/school-community.png" alt="A teacher walking with students on the school grounds" width="720" height="1280" loading="lazy">
+                <figcaption><strong>Growing together</strong><span>A community that learns, leads, and moves forward together.</span></figcaption>
+              </figure>
+            </div>
+          </section>
         </div>
 
         <section class="page-view" data-view="classes" hidden>
