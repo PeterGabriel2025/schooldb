@@ -29,10 +29,10 @@
     <div class="app-shell">
       <aside class="sidebar">
         <div class="brand-panel">
-          <div class="brand-icon"><img src="./assets/turning-point-logo.png" alt="" width="42" height="42" /></div>
+          <div class="brand-icon"><img src="./assets/school-crest-mobile.png" alt="" width="42" height="42" /></div>
           <div>
             <h1>Turning Point</h1>
-            <p>School Result Management System</p>
+            <p>School Portal</p>
           </div>
           <button class="theme-toggle" type="button" aria-label="Switch to dark mode" title="Switch to dark mode">
             <span class="theme-toggle-icon" aria-hidden="true">☾</span>
@@ -119,30 +119,30 @@
           </div>
         </header>
 
-        <div class="page-view active" data-view="dashboard">
+        <div class="page-view active dashboard-view" data-view="dashboard">
           <section class="overview-grid" data-live-dashboard>
             <div class="metric-card accent-blue">
-              <div class="metric-icon">👨‍🏫</div>
-              <div>
-                <label>Total Teachers</label>
-                <strong data-metric="teachers">—</strong>
-              </div>
-            </div>
-            <div class="metric-card accent-cyan">
               <div class="metric-icon">👩‍🎓</div>
               <div>
                 <label>Total Students</label>
                 <strong data-metric="students">—</strong>
               </div>
             </div>
-            <div class="metric-card accent-orange">
+            <div class="metric-card accent-cyan">
+              <div class="metric-icon">👨‍🏫</div>
+              <div>
+                <label>Total Teachers</label>
+                <strong data-metric="teachers">—</strong>
+              </div>
+            </div>
+            <div class="metric-card accent-purple">
               <div class="metric-icon">🏫</div>
               <div>
                 <label>Total Classes</label>
                 <strong data-metric="classes">—</strong>
               </div>
             </div>
-            <div class="metric-card accent-green">
+            <div class="metric-card accent-orange">
               <div class="metric-icon">📝</div>
               <div>
                 <label>Pending Results</label>
@@ -150,55 +150,68 @@
               </div>
             </div>
           </section>
-          <a
-            class="exam-setup-banner"
-            href="https://snapexamw.netlify.app/"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Click to set up your exam question easily (opens in a new tab)"
-          >
-            <span class="exam-setup-icon" aria-hidden="true">✦</span>
-            <span class="exam-setup-copy">
-              <span class="exam-setup-eyebrow">EXAM QUESTION SETUP</span>
-              <strong>Click to set up your exam question easily</strong>
-              <span>Create and organize exam questions in minutes.</span>
-            </span>
-            <span class="exam-setup-arrow" aria-hidden="true">↗</span>
-          </a>
-          <section class="panel teacher-dashboard-classes" data-teacher-only hidden>
+          <section class="panel dashboard-class-overview">
             <div class="panel-header">
-              <div><h3>My Assigned Classes</h3><p class="muted-text">Classes assigned to you for the current academic session.</p></div>
-              <button class="btn-small" type="button" data-go="classes">View all</button>
+              <div><h3><span aria-hidden="true">👥</span> Students by Class</h3><p class="muted-text" data-dashboard-class-context>Current student enrollments in each class.</p></div>
+              <button class="ghost-btn dashboard-view-all" type="button" data-go="classes">View all <span aria-hidden="true">→</span></button>
             </div>
-            <div class="class-cards" data-dashboard-class-cards><p class="muted-text">Loading assigned classes…</p></div>
+            <div class="class-cards dashboard-class-cards" data-dashboard-class-cards><p class="muted-text">Loading class enrollments…</p></div>
           </section>
-          <section class="dashboard-gallery" data-dashboard-gallery aria-labelledby="dashboard-gallery-title">
-            <div class="dashboard-gallery-heading">
-              <div>
-                <span class="dashboard-gallery-eyebrow">OUR SCHOOL COMMUNITY</span>
-                <h3 id="dashboard-gallery-title">Life at Great Turning Point</h3>
-                <p>Learning, confidence, and community—captured in moments that make us proud.</p>
+          <section class="dashboard-bottom-grid" aria-label="School highlights and shortcuts">
+            <section class="dashboard-gallery" data-dashboard-gallery aria-labelledby="dashboard-gallery-title">
+              <div class="dashboard-gallery-heading">
+                <div>
+                  <span class="dashboard-gallery-eyebrow">OUR SCHOOL COMMUNITY</span>
+                  <h3 id="dashboard-gallery-title">Building Knowledge, Shaping Tomorrow</h3>
+                  <p>Life at Great Turning Point</p>
+                </div>
               </div>
-              <span class="dashboard-gallery-mark" aria-hidden="true">✦</span>
-            </div>
-            <div class="dashboard-gallery-stage" role="group" aria-roledescription="carousel" aria-label="School gallery">
-              <figure class="dashboard-gallery-slide is-active" data-gallery-slide aria-hidden="false" style="--gallery-image: url('/assets/dashboard-gallery/stage-performance-1.png')">
-                <img src="/assets/dashboard-gallery/stage-performance-1.png" alt="A young performer sharing their talent on stage" width="720" height="429" fetchpriority="high">
-                <figcaption><strong>Talent and confidence</strong><span>Celebrating every voice and every gift.</span></figcaption>
-              </figure>
-              <figure class="dashboard-gallery-slide" data-gallery-slide aria-hidden="true" inert style="--gallery-image: url('/assets/dashboard-gallery/stage-performance-2.png')">
-                <img src="/assets/dashboard-gallery/stage-performance-2.png" alt="A young performer speaking confidently into a microphone" width="720" height="397" loading="lazy">
-                <figcaption><strong>Every voice matters</strong><span>Confidence grows when students get the chance to shine.</span></figcaption>
-              </figure>
-              <figure class="dashboard-gallery-slide" data-gallery-slide aria-hidden="true" inert style="--gallery-image: url('/assets/dashboard-gallery/great-turning-point.png')">
-                <img src="/assets/dashboard-gallery/great-turning-point.png" alt="Great Turning Point school emblem in the school community" width="628" height="638" loading="lazy">
-                <figcaption><strong>Great Turning Point</strong><span>Growing together and building bright futures.</span></figcaption>
-              </figure>
-              <figure class="dashboard-gallery-slide" data-gallery-slide aria-hidden="true" inert style="--gallery-image: url('/assets/dashboard-gallery/school-community.png')">
-                <img src="/assets/dashboard-gallery/school-community.png" alt="A teacher walking with students on the school grounds" width="720" height="1280" loading="lazy">
-                <figcaption><strong>Growing together</strong><span>A community that learns, leads, and moves forward together.</span></figcaption>
-              </figure>
-            </div>
+              <div class="dashboard-gallery-stage" role="group" aria-roledescription="carousel" aria-label="School gallery">
+                <figure class="dashboard-gallery-slide is-active" data-gallery-slide aria-hidden="false" style="--gallery-image: url('/assets/dashboard-gallery/stage-performance-1.png')">
+                  <img src="/assets/dashboard-gallery/stage-performance-1.png" alt="A young performer sharing their talent on stage" width="720" height="429" fetchpriority="high">
+                  <figcaption><strong>Talent and confidence</strong><span>Celebrating every voice and every gift.</span></figcaption>
+                </figure>
+                <figure class="dashboard-gallery-slide" data-gallery-slide aria-hidden="true" inert style="--gallery-image: url('/assets/dashboard-gallery/stage-performance-2.png')">
+                  <img src="/assets/dashboard-gallery/stage-performance-2.png" alt="A young performer speaking confidently into a microphone" width="720" height="397" loading="lazy">
+                  <figcaption><strong>Every voice matters</strong><span>Confidence grows when students get the chance to shine.</span></figcaption>
+                </figure>
+                <figure class="dashboard-gallery-slide" data-gallery-slide aria-hidden="true" inert style="--gallery-image: url('/assets/dashboard-gallery/great-turning-point.png')">
+                  <img src="/assets/dashboard-gallery/great-turning-point.png" alt="Great Turning Point school emblem in the school community" width="628" height="638" loading="lazy">
+                  <figcaption><strong>Great Turning Point</strong><span>Growing together and building bright futures.</span></figcaption>
+                </figure>
+                <figure class="dashboard-gallery-slide" data-gallery-slide aria-hidden="true" inert style="--gallery-image: url('/assets/dashboard-gallery/school-community.png')">
+                  <img src="/assets/dashboard-gallery/school-community.png" alt="A teacher walking with students on the school grounds" width="720" height="1280" loading="lazy">
+                  <figcaption><strong>Growing together</strong><span>A community that learns, leads, and moves forward together.</span></figcaption>
+                </figure>
+              </div>
+            </section>
+            <section class="panel dashboard-quick-actions" aria-labelledby="dashboard-quick-actions-title">
+              <div class="panel-header">
+                <h3 id="dashboard-quick-actions-title"><span aria-hidden="true">⚡</span> Quick Actions</h3>
+                <button class="dashboard-view-all" type="button" data-go="reports">See All <span aria-hidden="true">→</span></button>
+              </div>
+              <div class="dashboard-action-list">
+                <button type="button" data-go="students"><span aria-hidden="true">♟</span>View all students<span aria-hidden="true">›</span></button>
+                <button type="button" data-go="classes"><span aria-hidden="true">▦</span>Manage classes<span aria-hidden="true">›</span></button>
+                <button type="button" data-go="results"><span aria-hidden="true">▤</span>Check results<span aria-hidden="true">›</span></button>
+                <button type="button" data-go="reports"><span aria-hidden="true">▧</span>View reports<span aria-hidden="true">›</span></button>
+              </div>
+            </section>
+            <a
+              class="exam-setup-banner"
+              href="https://snapexamw.netlify.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Click to set up your exam question easily (opens in a new tab)"
+            >
+              <span class="exam-setup-icon" aria-hidden="true">✦</span>
+              <span class="exam-setup-copy">
+                <span class="exam-setup-eyebrow">EXAM QUESTION SETUP</span>
+                <strong>Click to set up your exam question easily</strong>
+                <span>Create and organize exam questions in minutes.</span>
+              </span>
+              <span class="exam-setup-arrow" aria-hidden="true">↗</span>
+            </a>
           </section>
         </div>
 
@@ -721,6 +734,20 @@
         <div class="toast-message" role="status" aria-live="polite"></div>
 
       </main>
+      <nav class="mobile-bottom-nav" aria-label="Mobile navigation">
+        <button type="button" class="nav-item active" data-page="dashboard" aria-label="Home">
+          <span aria-hidden="true">⌂</span><small>Home</small>
+        </button>
+        <button type="button" class="nav-item" data-page="students" aria-label="Students">
+          <span aria-hidden="true">♟</span><small>Students</small>
+        </button>
+        <button type="button" class="nav-item" data-page="reports" aria-label="Reports">
+          <span aria-hidden="true">▥</span><small>Reports</small>
+        </button>
+        <button type="button" class="nav-item" data-page="settings" data-admin-only hidden aria-label="Settings">
+          <span aria-hidden="true">⚙</span><small>Settings</small>
+        </button>
+      </nav>
     </div>
 
     <script type="module" src="/script.js"></script>

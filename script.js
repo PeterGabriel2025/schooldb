@@ -262,7 +262,6 @@ document.addEventListener('DOMContentLoaded', () => {
       profile.role === 'administrator'
         ? supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('is_active', true).neq('role', 'administrator')
         : Promise.resolve({ count: null, error: null }),
-      supabase.from('students').select('id', { count: 'exact', head: true }).eq('is_active', true),
       supabase.from('classes').select('id', { count: 'exact', head: true }).eq('is_active', true),
       supabase.from('student_subject_results').select('id', { count: 'exact', head: true }).in('status', ['submitted', 'under_review'])
     ]);
@@ -274,9 +273,8 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     if (profile.role === 'administrator') teacherMetric.textContent = String(counts[0].count ?? 0);
-    document.querySelector('[data-metric="students"]').textContent = String(counts[1].count ?? 0);
-    document.querySelector('[data-metric="classes"]').textContent = String(counts[2].count ?? 0);
-    document.querySelector('[data-metric="pending-results"]').textContent = String(counts[3].count ?? 0);
+    document.querySelector('[data-metric="classes"]').textContent = String(counts[1].count ?? 0);
+    document.querySelector('[data-metric="pending-results"]').textContent = String(counts[2].count ?? 0);
   };
 
   const addSelectOption = (select, value, label) => {
@@ -318,6 +316,32 @@ document.addEventListener('DOMContentLoaded', () => {
     return terms;
   };
 
+  const sortClasses = (classes) => {
+    const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+    const order = (className) => {
+      const name = className.trim();
+      const patterns = [
+        [/^PRE[-\s]?NURSERY(?:\s|$)/i, 0],
+        [/^NURSERY\s*(\d+)/i, 1],
+        [/^BASIC\s*(\d+)/i, 2],
+        [/^JSS\s*(\d+)/i, 3],
+        [/^SSS\s*(\d+)/i, 4]
+      ];
+      for (const [pattern, group] of patterns) {
+        const match = name.match(pattern);
+        if (match) return [group, Number(match[1] || 0)];
+      }
+      return [5, 0];
+    };
+    return [...classes].sort((left, right) => {
+      const [leftGroup, leftLevel] = order(left.name);
+      const [rightGroup, rightLevel] = order(right.name);
+      return leftGroup - rightGroup
+        || leftLevel - rightLevel
+        || collator.compare(left.name, right.name);
+    });
+  };
+
   const copyClassOptions = (select) => {
     const isMasterScope = select === masterClassSelect || select === resultClassSelect;
     const classes = currentProfile?.role === 'administrator'
@@ -326,15 +350,16 @@ document.addEventListener('DOMContentLoaded', () => {
       : isMasterScope && currentProfile?.role !== 'administrator'
         ? currentClassesAll.filter((item) => currentTeacherClassIds.has(item.id))
         : currentClasses;
-    replaceSelectOptions(select, classes, (item) => `${item.name}${item.is_active ? '' : ' · Archived'}`);
+    replaceSelectOptions(select, sortClasses(classes), (item) => `${item.name}${item.is_active ? '' : ' · Archived'}`);
   };
 
   const copySessionOptions = (select) => {
     const isMasterScope = select === masterSessionSelect || select === resultSessionSelect;
     const showArchived = currentProfile?.role === 'administrator' && isMasterScope;
-    let records = showArchived
+    let records = (showArchived
       ? currentSessions
-      : currentSessions.filter((item) => item.is_active !== false);
+      : currentSessions.filter((item) => item.is_active !== false))
+      .filter((item) => item.name !== '2027/2028');
     if (currentProfile?.role !== 'administrator' && select === studentSessionSelect) {
       const classId = studentClassSelect.value;
       const assignedSessionIds = new Set(
@@ -358,7 +383,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const classId = classSelect.value;
       records = records.filter((item) => currentTeacherClassSessions.has(`${classId}:${item.id}`));
     }
-    const defaultId = records.find((item) => item.is_current)?.id || records[0]?.id || '';
+    const defaultId = records.find((item) => item.name === '2026/2027')?.id
+      || records.find((item) => item.is_current)?.id
+      || records[0]?.id
+      || '';
     replaceSelectOptions(select, records,
       (item) => `${item.name}${item.is_active === false ? ' · Archived' : ''}`,
       defaultId);
@@ -468,9 +496,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const icon = document.createElement('span');
       icon.className = 'class-icon';
       icon.textContent = '🏫';
-      const stage = document.createElement('span');
-      stage.className = 'badge info';
-      stage.textContent = schoolClass.stage.charAt(0).toLocaleUpperCase() + schoolClass.stage.slice(1);
       const name = document.createElement('h3');
       name.textContent = schoolClass.name;
       const details = document.createElement('p');
@@ -478,13 +503,16 @@ document.addEventListener('DOMContentLoaded', () => {
       const enrollmentCount = enrollmentCounts?.get(`${schoolClass.id}:${classSession?.id || ''}`)
         ?? enrollmentCounts?.get(schoolClass.id);
       details.textContent = `${enrollmentCount === undefined ? '—' : enrollmentCount} students · ${classSession?.name || 'No academic session'}`;
-      const button = document.createElement('button');
-      button.className = 'btn-small';
-      button.type = 'button';
-      button.textContent = 'Open student register';
-      button.dataset.classRegister = schoolClass.id;
-      button.dataset.sessionId = classSession?.id || '';
-      card.append(icon, stage, name, details, button);
+      card.append(icon, name, details);
+      if (container !== dashboardClassCards) {
+        const button = document.createElement('button');
+        button.className = 'btn-small';
+        button.type = 'button';
+        button.textContent = 'Open student register';
+        button.dataset.classRegister = schoolClass.id;
+        button.dataset.sessionId = classSession?.id || '';
+        card.append(button);
+      }
       container?.append(card);
     });
   };
@@ -1737,7 +1765,7 @@ document.addEventListener('DOMContentLoaded', () => {
           moveSession.className = 'subject-session-select';
           moveSession.dataset.moveOfferings = group.map((item) => item.id).join(',');
           moveSession.setAttribute('aria-label', `Move ${offering.subjects?.name || 'subject'} to another session`);
-          currentSessions.filter((session) => session.is_active).forEach((session) => {
+          currentSessions.filter((session) => session.is_active && session.name !== '2027/2028').forEach((session) => {
             const option = document.createElement('option');
             option.value = session.id;
             option.textContent = session.name;
@@ -1768,16 +1796,17 @@ document.addEventListener('DOMContentLoaded', () => {
       createTeacherOfferings = (offeringsResult.data || []).filter((item) => item.is_active && item.subjects?.is_active);
       replaceSelectOptions(document.querySelector('[data-create-class-select]'), createTeacherClasses,
         (item) => item.name);
-      replaceSelectOptions(document.querySelector('[data-create-session-select]'), currentSessions,
+      replaceSelectOptions(document.querySelector('[data-create-session-select]'),
+        currentSessions.filter((item) => item.name !== '2027/2028'),
         (item) => item.name);
       const createTermSelect = document.querySelector('[data-create-term-select]');
       await loadTerms(document.querySelector('[data-create-session-select]').value, createTermSelect);
       replaceSelectOptions(document.querySelector('[data-create-offering-select]'),
-        createTeacherOfferings,
+        createTeacherOfferings.filter((item) => item.academic_sessions?.name !== '2027/2028'),
         (item) => `${item.subjects.name} · ${item.classes?.name} (${item.academic_sessions?.name})`);
       refreshCreateTeacherAssignments();
       replaceSelectOptions(document.querySelector('[data-offering-session]'),
-        currentSessions.filter((item) => item.is_active), (item) => item.name);
+        currentSessions.filter((item) => item.is_active && item.name !== '2027/2028'), (item) => item.name);
       populateSectionAssessmentForm(sectionAssessmentSelect.value);
 
       renderSetupList(
@@ -2509,7 +2538,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const sessions = sessionsResult.data || [];
-    const allClasses = classesResult.data || [];
+    const allClasses = sortClasses(classesResult.data || []);
     const schoolClasses = allClasses.filter((item) => item.is_active);
     let assignedSubjectClasses = [];
     if (profile.role !== 'administrator' && subjectAssignmentsResult.data?.length) {
@@ -2525,11 +2554,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const assignmentByOffering = new Map(
         (subjectAssignmentsResult.data || []).map((assignment) => [assignment.class_subject_offering_id, assignment])
       );
-      assignedSubjectClasses = (subjectOfferings || []).map((offering) => ({
-        ...offering,
-        term_id: assignmentByOffering.get(offering.id)?.term_id || '',
-        terms: assignmentByOffering.get(offering.id)?.terms || null
-      }));
+      assignedSubjectClasses = (subjectOfferings || [])
+        .filter((offering) => offering.academic_sessions?.name !== '2027/2028')
+        .map((offering) => ({
+          ...offering,
+          term_id: assignmentByOffering.get(offering.id)?.term_id || '',
+          terms: assignmentByOffering.get(offering.id)?.terms || null
+        }));
     }
     currentTeacherRoles = new Set((teacherRolesResult.data || []).map((item) => item.role));
     currentTeacherSubjectOfferings = assignedSubjectClasses;
@@ -2576,14 +2607,35 @@ document.addEventListener('DOMContentLoaded', () => {
       item.hidden = profile.role === 'administrator';
     });
     document.querySelector('[data-menu-sign-out]')?.removeAttribute('hidden');
-    const activeSessions = sessions.filter((item) => item.is_active);
-    const session = activeSessions.find((item) => item.is_current) || activeSessions[0] || null;
+    const activeSessions = sessions.filter((item) => item.is_active && item.name !== '2027/2028');
+    const session = activeSessions.find((item) => item.name === '2026/2027')
+      || activeSessions.find((item) => item.is_current)
+      || activeSessions[0]
+      || null;
+    const dashboardClasses = profile.role === 'administrator'
+      ? schoolClasses
+      : currentScoreClasses.filter((schoolClass) =>
+        Boolean(session && (
+          currentTeacherClassSessions.has(`${schoolClass.id}:${session.id}`)
+          || assignedSubjectClasses.some((offering) =>
+            offering.class_id === schoolClass.id && offering.academic_session_id === session.id)
+        )));
+    const dashboardClassSessions = new Map(
+      dashboardClasses.map((schoolClass) => [schoolClass.id, session])
+    );
     let enrollmentCounts = new Map();
-    const countSessionIds = profile.role === 'administrator'
-      ? (session ? [session.id] : [])
-      : [...new Set([...currentTeacherClassSessionMap.values()]
-        .filter(Boolean)
-        .map((assignedSession) => assignedSession.id))];
+    const dashboardClassSessionKeys = new Set(dashboardClasses
+      .map((schoolClass) => {
+        const classSession = dashboardClassSessions.get(schoolClass.id);
+        return classSession ? `${schoolClass.id}:${classSession.id}` : '';
+      })
+      .filter(Boolean));
+    dashboardClassSessionKeys.forEach((key) => enrollmentCounts.set(key, 0));
+    const countSessionIds = [...new Set([...dashboardClassSessions.values()]
+      .filter(Boolean)
+      .filter((assignedSession) => dashboardClasses.some((schoolClass) =>
+        dashboardClassSessionKeys.has(`${schoolClass.id}:${assignedSession.id}`)))
+      .map((assignedSession) => assignedSession.id))];
     if (countSessionIds.length) {
       const { data: enrollments, error } = await supabase
         .from('class_enrollments')
@@ -2594,20 +2646,37 @@ document.addEventListener('DOMContentLoaded', () => {
         setClassNotice(`Could not load class enrollment counts: ${error.message}`);
         console.error('Could not load class enrollment counts.', error);
         enrollmentCounts = null;
+        document.querySelector('[data-metric="students"]').textContent = '—';
       } else {
-        (enrollments || []).filter((item) => !item.left_on).forEach(({ class_id: classId, academic_session_id: sessionId }) => {
+        (enrollments || [])
+          .filter((item) => !item.left_on
+            && dashboardClassSessionKeys.has(`${item.class_id}:${item.academic_session_id}`))
+          .forEach(({ class_id: classId, academic_session_id: sessionId }) => {
           const key = `${classId}:${sessionId}`;
           enrollmentCounts.set(key, (enrollmentCounts.get(key) || 0) + 1);
         });
+        const totalStudents = [...enrollmentCounts.values()].reduce((total, count) => total + count, 0);
+        document.querySelector('[data-metric="students"]').textContent = String(totalStudents);
+        const classContext = document.querySelector('[data-dashboard-class-context]');
+        classContext.textContent = profile.role === 'administrator'
+          ? `${session?.name || 'Current session'} · current student enrollments`
+          : `${session?.name || 'Current session'} · current enrollments in your assigned classes`;
         setClassNotice('');
       }
     } else {
-      setClassNotice(schoolClasses.length ? 'Create an academic session to see current class enrollments.' : '');
+      document.querySelector('[data-metric="students"]').textContent = session ? '0' : '—';
+      const classContext = document.querySelector('[data-dashboard-class-context]');
+      classContext.textContent = profile.role === 'administrator'
+        ? `${session?.name || 'No active session'} · current student enrollments`
+        : `${session?.name || 'No active session'} · current enrollments in your assigned classes`;
+      setClassNotice(profile.role === 'administrator' && schoolClasses.length && !session
+        ? 'Create an academic session to see current class enrollments.'
+        : !session
+          ? 'No active academic session is available for your assigned classes.'
+          : '');
     }
-    renderClassCards(currentClasses, session, enrollmentCounts);
-    if (profile.role !== 'administrator') {
-      renderClassCards(currentClasses, session, enrollmentCounts, dashboardClassCards);
-    }
+    renderClassCards(dashboardClasses, session, enrollmentCounts, classCards, dashboardClassSessions);
+    renderClassCards(dashboardClasses, session, enrollmentCounts, dashboardClassCards, dashboardClassSessions);
 
     [
       studentClassSelect, scoreClassSelect, masterClassSelect, resultClassSelect
@@ -2620,7 +2689,7 @@ document.addEventListener('DOMContentLoaded', () => {
     void loadManagementData();
     if (!studentClassSelect.options.length || !studentSessionSelect.options.length) {
       renderStudents([]);
-      renderClassCards(currentClasses, session, enrollmentCounts);
+      renderClassCards(dashboardClasses, session, enrollmentCounts, classCards, dashboardClassSessions);
       await Promise.all([loadScoreScreen(), loadMasterSheet(), loadResultScreen()]);
       const missing = [
         !studentClassSelect.options.length ? (profile.role === 'administrator' ? 'a class' : 'an assigned class') : null,
@@ -2659,7 +2728,9 @@ document.addEventListener('DOMContentLoaded', () => {
     copySessionOptions(studentSessionSelect);
     if (!studentSessionSelect.value) {
       const assignedSession = currentTeacherClassSessionMap.get(studentClassSelect.value);
-      if (assignedSession) addSelectOption(studentSessionSelect, assignedSession.id, assignedSession.name);
+      if (assignedSession && assignedSession.name !== '2027/2028') {
+        addSelectOption(studentSessionSelect, assignedSession.id, assignedSession.name);
+      }
     }
     void loadStudentRows();
   });
@@ -2671,8 +2742,11 @@ document.addEventListener('DOMContentLoaded', () => {
     copySessionOptions(studentSessionSelect);
     if (![...studentSessionSelect.options].some((option) => option.value === registerButton.dataset.sessionId)) {
       const assignedSession = currentSessions.find((item) => item.id === registerButton.dataset.sessionId);
-      if (assignedSession) addSelectOption(studentSessionSelect, assignedSession.id, assignedSession.name);
+      if (assignedSession && assignedSession.name !== '2027/2028') {
+        addSelectOption(studentSessionSelect, assignedSession.id, assignedSession.name);
+      }
     }
+    if (![...studentSessionSelect.options].some((option) => option.value === registerButton.dataset.sessionId)) return;
     studentSessionSelect.value = registerButton.dataset.sessionId;
     showPage('students');
     void loadStudentRows();
