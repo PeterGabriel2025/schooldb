@@ -45,6 +45,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const scoreSubjectSelect = document.querySelector('#score-subject-select');
   const scoreHead = document.querySelector('[data-score-head]');
   const scoreBody = document.querySelector('[data-score-body]');
+  const scoreActionDialog = document.querySelector('#score-action-dialog');
+  const scoreActionForm = document.querySelector('#score-action-form');
+  const scoreActionReason = document.querySelector('#score-action-reason');
+  const scoreActionMessage = document.querySelector('[data-score-action-message]');
+  let resolveScoreAction;
   const masterClassSelect = document.querySelector('#master-class-select');
   const masterSessionSelect = document.querySelector('#master-session-select');
   const masterTermSelect = document.querySelector('#master-term-select');
@@ -845,8 +850,19 @@ document.addEventListener('DOMContentLoaded', () => {
         reopenButton.textContent = 'Reopen';
         reopenButton.setAttribute('aria-label', `Reopen submitted result for ${student.first_name} ${student.last_name}`);
         actions.append(reopenButton);
-      } else if (result) {
-        actions.textContent = '—';
+      }
+      if (result) {
+        const deleteButton = document.createElement('button');
+        deleteButton.className = 'btn-small danger-action';
+        deleteButton.type = 'button';
+        deleteButton.dataset.deleteScoreResult = '';
+        deleteButton.textContent = 'Delete';
+        deleteButton.setAttribute('aria-label', `Delete ${result.status.replaceAll('_', ' ')} result for ${student.first_name} ${student.last_name}`);
+        if (currentProfile?.role !== 'administrator' && result.status !== 'draft') {
+          deleteButton.disabled = true;
+          deleteButton.title = 'Only administrators can delete results after submission.';
+        }
+        actions.append(deleteButton);
       }
       row.append(total, grade, status, actions);
       scoreBody.append(row);
@@ -984,6 +1000,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const scoreInputsForRow = (row) => [...row.querySelectorAll('[data-score-component]')];
 
+  const requestScoreActionReason = ({ title, description, submitLabel, destructive = false }) => {
+    if (scoreActionDialog.open) return Promise.resolve(null);
+    document.querySelector('#score-action-title').textContent = title;
+    document.querySelector('[data-score-action-description]').textContent = description;
+    document.querySelector('[data-score-action-submit]').textContent = submitLabel;
+    document.querySelector('[data-score-action-submit]').classList.toggle('danger-action', destructive);
+    scoreActionReason.value = '';
+    scoreActionMessage.textContent = '';
+    scoreActionDialog.showModal();
+    scoreActionReason.focus();
+    return new Promise((resolve) => {
+      resolveScoreAction = resolve;
+    });
+  };
+
+  scoreActionForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const reason = scoreActionReason.value.trim();
+    if (reason.length < 10) {
+      scoreActionMessage.textContent = 'Enter a reason of at least 10 characters.';
+      scoreActionReason.focus();
+      return;
+    }
+    scoreActionDialog.close('confirm');
+  });
+  scoreActionDialog.addEventListener('close', () => {
+    const resolve = resolveScoreAction;
+    resolveScoreAction = undefined;
+    resolve?.(scoreActionDialog.returnValue === 'confirm' ? scoreActionReason.value.trim() : null);
+  });
+  document.querySelectorAll('[data-cancel-score-action]').forEach((button) => {
+    button.addEventListener('click', () => scoreActionDialog.close('cancel'));
+  });
+
   document.querySelector('[data-score-body]').addEventListener('input', (event) => {
     if (event.target.matches('[data-score-component]')) updateScoreRowSummary(event.target.closest('tr'));
   });
@@ -1011,17 +1061,64 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    const deleteButton = event.target.closest('[data-delete-score-result]');
+    if (deleteButton) {
+      const row = deleteButton.closest('tr[data-student-id][data-result-id]');
+      if (!row || deleteButton.disabled || !currentScoreOffering) return;
+
+      const studentName = row.children[1].textContent.trim();
+      const context = {
+        resultId: row.dataset.resultId,
+        classId: scoreClassSelect.value,
+        sessionId: scoreSessionSelect.value,
+        offeringId: currentScoreOffering.id,
+        termId: scoreTermSelect.value
+      };
+      const reason = await requestScoreActionReason({
+        title: `Delete ${studentName}'s result?`,
+        description: `Permanently delete the ${row.querySelector('.badge')?.textContent || ''} result for ${currentScoreOffering.subjects?.name || 'this subject'}. This cannot be undone.`,
+        submitLabel: 'Delete result',
+        destructive: true
+      });
+      if (reason === null) return;
+
+      deleteButton.disabled = true;
+      deleteButton.textContent = 'Deleting…';
+      const message = document.querySelector('[data-score-message]');
+      message.textContent = 'Deleting result…';
+      try {
+        const { error } = await supabase.rpc('delete_student_subject_result', {
+          p_result_id: context.resultId,
+          p_class_id: context.classId,
+          p_academic_session_id: context.sessionId,
+          p_class_subject_offering_id: context.offeringId,
+          p_term_id: context.termId,
+          p_reason: reason.trim()
+        });
+        if (error) throw error;
+
+        await loadScoreScreen();
+        message.textContent = `Deleted ${studentName}'s result. The action was recorded in the audit log.`;
+        void refreshDashboard(currentProfile, dataRequest);
+      } catch (error) {
+        console.error('Deleting a student result failed.', error);
+        message.textContent = error.message || 'Could not delete the student result.';
+        deleteButton.disabled = false;
+        deleteButton.textContent = 'Delete';
+      }
+      return;
+    }
+
     const reopenButton = event.target.closest('[data-reopen-submitted-result]');
     if (!reopenButton || currentProfile?.role !== 'administrator') return;
     const row = reopenButton.closest('tr[data-student-id]');
     if (!row?.dataset.resultId) return;
-    const reason = window.prompt('Enter the reason for reopening this submitted result (at least 10 characters):');
+    const reason = await requestScoreActionReason({
+      title: 'Reopen result for correction?',
+      description: `Reopen ${row.children[1].textContent.trim()}'s submitted result. It will return to draft so its scores can be corrected.`,
+      submitLabel: 'Reopen result'
+    });
     if (reason === null) return;
-    if (reason.trim().length < 10) {
-      document.querySelector('[data-score-message]').textContent =
-        'Enter a correction reason of at least 10 characters.';
-      return;
-    }
 
     reopenButton.disabled = true;
     const message = document.querySelector('[data-score-message]');
@@ -1029,7 +1126,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const { error } = await supabase.rpc('reopen_submitted_result', {
         p_result_id: row.dataset.resultId,
-        p_reason: reason.trim()
+        p_reason: reason
       });
       if (error) throw error;
     } catch (error) {

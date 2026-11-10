@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <script type="module" crossorigin src="/assets/index-C8Nd7uDc.js"></script>
+    <script type="module" crossorigin src="/assets/index-CTULKwnn.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-IViWebGu.css">
   </head>
   <body class="auth-required">
@@ -279,6 +279,22 @@
             <div class="score-actions"><span class="form-message" data-score-message aria-live="polite"></span><div><button class="ghost-btn" type="button" data-save-scores>Save draft</button><button class="btn-primary compact" type="button" data-submit-scores>Submit results</button></div></div>
           </div>
         </section>
+
+        <dialog class="form-dialog score-action-dialog" id="score-action-dialog" aria-labelledby="score-action-title">
+          <form id="score-action-form">
+            <div class="panel-header">
+              <div><h3 id="score-action-title"></h3><p class="muted-text" data-score-action-description></p></div>
+              <button class="login-close" type="button" aria-label="Close" data-cancel-score-action>×</button>
+            </div>
+            <label for="score-action-reason">Reason</label>
+            <textarea id="score-action-reason" name="reason" minlength="10" maxlength="500" required aria-describedby="score-action-message"></textarea>
+            <p class="form-message" id="score-action-message" data-score-action-message role="status" aria-live="polite"></p>
+            <div class="header-actions">
+              <button class="ghost-btn" type="button" data-cancel-score-action>Cancel</button>
+              <button class="btn-primary" type="submit" data-score-action-submit></button>
+            </div>
+          </form>
+        </dialog>
 
         <section class="page-view" data-view="master" hidden>
           <div class="page-heading"><div><h2>Term Master Sheet</h2><p data-master-context>Select a class, session, and term.</p></div><div class="toolbar-controls"><button class="ghost-btn" data-print>Print master sheet</button><button class="btn-primary compact" type="button" data-export-master>Export CSV</button></div></div>
