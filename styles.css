@@ -4166,6 +4166,33 @@ thead th {
   isolation: isolate;
 }
 
+.dashboard-date {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 0 13px;
+  border: 1px solid #dce5fa;
+  border-radius: 22px;
+  background: linear-gradient(135deg, rgba(255,255,255,.92), rgba(235,241,255,.94));
+  box-shadow: 0 4px 12px rgba(38, 64, 135, .07);
+  color: #23355f;
+  font-size: .72rem;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.dashboard-date-icon {
+  color: #244bc0;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.topbar:not(:has(+ .dashboard-view.active)) .dashboard-date {
+  display: none;
+}
+
 .dashboard-view::before {
   position: absolute;
   z-index: -1;
@@ -4520,6 +4547,25 @@ thead th {
   font-size: .68rem;
 }
 
+.dashboard-runner-scene {
+  position: relative;
+  height: clamp(110px, 16vw, 170px);
+  margin: 4px calc(-1 * clamp(18px, 2.7vw, 40px)) -40px;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(235,242,255,.16), rgba(217,232,255,.78)),
+    radial-gradient(ellipse at 85% 100%, rgba(86,128,220,.2), transparent 50%);
+  pointer-events: none;
+}
+
+.dashboard-runner-scene img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 63%;
+}
+
 @media (max-width: 980px) {
   .dashboard-class-cards {
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -4657,6 +4703,16 @@ thead th {
     min-height: 31px;
     font-size: .68rem;
   }
+}
+
+:root[data-theme="dark"] .dashboard-date {
+  border-color: var(--line);
+  background: linear-gradient(135deg, var(--card), var(--card-alt));
+  color: var(--text);
+}
+
+:root[data-theme="dark"] .dashboard-date-icon {
+  color: #99adff;
 }
 
 :root[data-theme="dark"] .dashboard-class-cards .class-card,
@@ -4884,8 +4940,15 @@ thead th {
     min-width: 0;
   }
 
+  .topbar:has(+ .dashboard-view.active) .dashboard-date {
+    min-height: 36px;
+    gap: 6px;
+    padding: 0 10px;
+    font-size: .64rem;
+  }
+
   .topbar:has(+ .dashboard-view.active) .page-title-wrap h2 {
-    font-size: clamp(1.6rem, 8vw, 2rem);
+    font-size: clamp(1.45rem, 7vw, 1.8rem);
     letter-spacing: -.05em;
   }
 
@@ -4919,6 +4982,11 @@ thead th {
     box-shadow: 0 4px 12px rgba(55, 74, 173, .2);
     color: #fff;
     font-size: .92rem;
+  }
+
+  .dashboard-runner-scene {
+    height: clamp(96px, 31vw, 132px);
+    margin: 4px -14px calc(-26px - env(safe-area-inset-bottom));
   }
 
   .overview-grid[data-live-dashboard] {
@@ -5001,6 +5069,13 @@ thead th {
     border-radius: 20px;
     background: linear-gradient(145deg, rgba(255,255,255,.98), rgba(250,249,255,.98));
     box-shadow: 0 7px 20px rgba(52, 52, 137, .08);
+  }
+
+  .topbar:has(+ .dashboard-view.active) .dashboard-date {
+    max-width: 132px;
+    overflow: hidden;
+    font-size: .57rem;
+    text-overflow: ellipsis;
   }
 
   .dashboard-class-overview .panel-header {

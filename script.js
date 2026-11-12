@@ -5,6 +5,25 @@ document.addEventListener('DOMContentLoaded', () => {
   window.setTimeout(() => splashScreen?.classList.add('is-hidden'), 1800);
   const main = document.querySelector('.main-panel');
   const dashboard = document.querySelector('[data-view="dashboard"]');
+  const dashboardDate = document.querySelector('[data-dashboard-date-value]');
+  const updateDashboardDate = () => {
+    if (!dashboardDate) return;
+    const now = new Date();
+    dashboardDate.textContent = new Intl.DateTimeFormat('en', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    }).format(now);
+    dashboardDate.dateTime = [
+      now.getFullYear(),
+      String(now.getMonth() + 1).padStart(2, '0'),
+      String(now.getDate()).padStart(2, '0')
+    ].join('-');
+  };
+  updateDashboardDate();
+  window.setInterval(updateDashboardDate, 60_000);
+  document.addEventListener('visibilitychange', updateDashboardDate);
   const pageTitles = {
     dashboard: ['Dashboard', 'Welcome back'],
     classes: ['My Classes', 'Your assigned classes and result progress'],

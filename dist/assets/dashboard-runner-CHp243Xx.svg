@@ -1,0 +1,145 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="180" viewBox="0 0 720 180" fill="none">
+  <style>
+    .runner {
+      animation: run-to-school 7s ease-in-out infinite;
+    }
+
+    .runner-front-arm {
+      transform-box: fill-box;
+      transform-origin: 0% 50%;
+      animation: arm-swing .48s ease-in-out infinite alternate;
+    }
+
+    .runner-back-arm {
+      transform-box: fill-box;
+      transform-origin: 100% 50%;
+      animation: arm-swing .48s ease-in-out infinite alternate-reverse;
+    }
+
+    .runner-front-leg {
+      transform-box: fill-box;
+      transform-origin: 0% 0%;
+      animation: leg-swing .48s ease-in-out infinite alternate;
+    }
+
+    .runner-back-leg {
+      transform-box: fill-box;
+      transform-origin: 100% 0%;
+      animation: leg-swing .48s ease-in-out infinite alternate-reverse;
+    }
+
+    @keyframes run-to-school {
+      0% { opacity: 0; transform: translateX(0); }
+      8% { opacity: 1; }
+      78% { opacity: 1; transform: translateX(88px); }
+      94% { opacity: .8; transform: translateX(102px); }
+      99%, 100% { opacity: 0; transform: translateX(102px); }
+    }
+
+    @keyframes arm-swing {
+      from { transform: rotate(-24deg); }
+      to { transform: rotate(25deg); }
+    }
+
+    @keyframes leg-swing {
+      from { transform: rotate(-22deg); }
+      to { transform: rotate(22deg); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .runner,
+      .runner-front-arm,
+      .runner-back-arm,
+      .runner-front-leg,
+      .runner-back-leg {
+        animation: none;
+      }
+
+      .runner {
+        opacity: .9;
+      }
+    }
+  </style>
+  <defs>
+    <linearGradient id="sky" x1="360" y1="0" x2="360" y2="180" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D9E8FF" stop-opacity=".08"/>
+      <stop offset="1" stop-color="#AFC9FF" stop-opacity=".46"/>
+    </linearGradient>
+    <linearGradient id="school" x1="520" y1="42" x2="680" y2="150" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFDF8"/>
+      <stop offset="1" stop-color="#D7E4FF"/>
+    </linearGradient>
+    <linearGradient id="uniform" x1="337" y1="69" x2="374" y2="126" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2679F5"/>
+      <stop offset="1" stop-color="#1444B1"/>
+    </linearGradient>
+    <filter id="soft-shadow" x="0" y="0" width="720" height="180" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="3"/>
+    </filter>
+  </defs>
+  <path d="M0 0h720v180H0z" fill="url(#sky)"/>
+  <path d="M0 126c73-20 142-18 205 0 83 23 132-7 214 0 100 8 177-12 301-1v55H0z" fill="#D9E9FF" fill-opacity=".72"/>
+  <path d="M0 143h720v37H0z" fill="#9CB8F0" fill-opacity=".34"/>
+  <path d="M0 157h720" stroke="#FFF" stroke-opacity=".72" stroke-width="3"/>
+  <path d="M0 169h720" stroke="#7999D6" stroke-opacity=".5" stroke-width="2"/>
+
+  <g opacity=".8">
+    <path d="M61 124V70h8v54m-22-45c5-18 34-18 40 0-5 17-34 18-40 0Z" fill="#31875D" fill-opacity=".72"/>
+    <path d="M31 124V87h7v37m-17-30c4-13 25-13 29 0-3 13-25 13-29 0Z" fill="#56A66B" fill-opacity=".68"/>
+    <path d="M485 124V65h8v59m-24-48c6-18 36-18 42 0-5 18-37 18-42 0Z" fill="#4B9D64" fill-opacity=".68"/>
+    <path d="M700 125V76h7v49m-21-39c5-16 31-16 36 0-5 16-31 16-36 0Z" fill="#5AAA70" fill-opacity=".7"/>
+  </g>
+
+  <g transform="translate(504 39)">
+    <path d="M8 49 83 8l75 41v77H8V49Z" fill="url(#school)" stroke="#6688D0" stroke-width="3"/>
+    <path d="M0 51 83 5l83 46" stroke="#2854B4" stroke-linecap="round" stroke-linejoin="round" stroke-width="7"/>
+    <path d="M37 33h92v17H37z" rx="3" fill="#fff" stroke="#B6C8EE" stroke-width="2"/>
+    <path d="M48 38h70v7H48z" fill="#2256BE"/>
+    <g fill="#7DA9F4" stroke="#fff" stroke-width="2">
+      <path d="M21 63h24v25H21z"/>
+      <path d="M58 63h24v25H58z"/>
+      <path d="M96 63h24v25H96z"/>
+      <path d="M133 63h18v25h-18z"/>
+    </g>
+    <path d="M70 91h28v35H70z" fill="#3556A4"/>
+    <circle cx="92" cy="109" r="2" fill="#F8D56A"/>
+    <path d="M0 128h167" stroke="#365CA8" stroke-linecap="round" stroke-width="5"/>
+    <path d="M44 38h78" stroke="#fff" stroke-width="2" opacity=".8"/>
+    <path d="M47 36h72v11H47z" fill="#FFF" fill-opacity=".95"/>
+    <text x="83" y="44" text-anchor="middle" fill="#244B9E" font-family="Arial,sans-serif" font-size="8" font-weight="700">TURNING POINT</text>
+  </g>
+
+  <ellipse cx="355" cy="143" rx="42" ry="7" fill="#213F81" fill-opacity=".22" filter="url(#soft-shadow)"/>
+
+  <g class="runner">
+    <g class="runner-back-leg">
+      <path d="m349 112-19 20-15 17" stroke="#263B72" stroke-linecap="round" stroke-linejoin="round" stroke-width="10"/>
+      <path d="m315 146-15 1-3 7 19 2 11-7-2-5-10 2Z" fill="#F8FAFF" stroke="#274579" stroke-width="2"/>
+    </g>
+    <g class="runner-front-leg">
+      <path d="m366 112 15 18 19 8" stroke="#263B72" stroke-linecap="round" stroke-linejoin="round" stroke-width="10"/>
+      <path d="m399 135 14 2 4 7-18 3-13-6 1-6 12 3Z" fill="#F8FAFF" stroke="#274579" stroke-width="2"/>
+    </g>
+    <path d="m341 75 28-2 12 41c-11 13-28 15-43 5l3-44Z" fill="url(#uniform)" stroke="#183F9B" stroke-width="2"/>
+    <path d="m346 79 13 3 12-5-2 13-11 5-12-5v-11Z" fill="#FFF" fill-opacity=".94"/>
+    <g class="runner-back-arm">
+      <path d="m343 82-15 13-11-3" stroke="#AD633E" stroke-linecap="round" stroke-linejoin="round" stroke-width="7"/>
+      <path d="m316 90-7 2 5 6 8-2-1-5-5-1Z" fill="#E8A078"/>
+    </g>
+    <g class="runner-front-arm">
+      <path d="m374 82 15-12 12 4" stroke="#AD633E" stroke-linecap="round" stroke-linejoin="round" stroke-width="7"/>
+      <path d="m402 71 8 1-1 7-8 1-4-4 5-5Z" fill="#E8A078"/>
+    </g>
+    <path d="m337 81-13 3-5 29 17 4 9-27-8-9Z" fill="#F5B830" stroke="#A56B13" stroke-width="2"/>
+    <path d="m330 86-5 24 11 3 7-23-13-4Z" fill="#F8D36D"/>
+    <path d="M343 69c0-11 8-19 18-19 11 0 18 8 18 18v6l-7 9-20-2-9-7v-5Z" fill="#9B5537"/>
+    <path d="M344 68c1-13 9-21 20-20 8 1 13 6 15 14-8-1-14-6-17-10-4 8-10 12-18 12v4Z" fill="#182648"/>
+    <path d="M373 68c0 3-2 5-5 5" stroke="#693923" stroke-linecap="round" stroke-width="2"/>
+    <circle cx="369" cy="66" r="1.7" fill="#1B2945"/>
+    <path d="M374 72c-3 2-6 2-9 1" stroke="#FFF0DF" stroke-linecap="round" stroke-width="1.7"/>
+    <path d="M342 77 351 72l4 4-7 9-6-8Z" fill="#202E52"/>
+    <path d="m355 76 8 3-4 5-9-1 5-7Z" fill="#F0B231"/>
+  </g>
+
+  <path d="M278 157h35m54 0h39m79 0h38" stroke="#FFF" stroke-linecap="round" stroke-opacity=".75" stroke-width="3" stroke-dasharray="14 12"/>
+</svg>
