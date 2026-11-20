@@ -1537,6 +1537,43 @@ input, select {
   gap: 7px;
 }
 
+.assignment-field {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  color: var(--text);
+}
+
+.assignment-checkbox-list {
+  display: grid;
+  gap: 2px;
+  max-height: 190px;
+  overflow: auto;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.assignment-checkbox-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 400;
+}
+
+.assignment-checkbox-option:hover {
+  background: var(--surface-muted);
+}
+
+.assignment-checkbox-option input {
+  flex: 0 0 auto;
+  margin-top: 3px;
+}
+
 [data-class-assignment-form] select[multiple],
 [data-subject-assignment-form] select[multiple] {
   min-height: 110px;

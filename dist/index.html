@@ -6,10 +6,9 @@
     <title>EduResults School Portal</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-
-    <script type="module" crossorigin src="/assets/index-CQVpbeqM.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-DuvQXEP1.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <script type="module" crossorigin src="/assets/index-CZ58anKM.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-BkwshBrL.css">
   </head>
   <body class="auth-required">
     <div class="splash-screen" data-splash-screen role="status" aria-label="Loading Turning Point Results">
@@ -520,7 +519,12 @@
               <label>New password (optional)<span class="password-input-wrap"><input name="password" type="password" minlength="8" autocomplete="new-password"><button class="password-toggle" type="button" aria-label="Show password" aria-pressed="false" data-password-toggle><span class="eye-icon" aria-hidden="true"></span></button></span><small class="muted-text">Leave blank to keep the current password.</small></label>
               <label>Confirm new password<span class="password-input-wrap"><input name="confirm_password" type="password" minlength="8" autocomplete="new-password"><button class="password-toggle" type="button" aria-label="Show password" aria-pressed="false" data-password-toggle><span class="eye-icon" aria-hidden="true"></span></button></span></label>
               <fieldset class="role-options"><legend>Roles</legend><label><input type="checkbox" name="roles" value="secondary_subject_teacher"> Secondary subject teacher</label><label><input type="checkbox" name="roles" value="secondary_class_teacher"> Secondary class teacher</label><label><input type="checkbox" name="roles" value="primary_teacher"> Primary teacher</label><label><input type="checkbox" name="roles" value="nursery_teacher"> Nursery teacher</label></fieldset>
+              <label>Assignment academic session<select name="academic_session_id" data-edit-session></select></label>
+              <label>Assignment term<select name="term_id" data-edit-term></select></label>
+              <div class="assignment-field" data-edit-classes-field><strong>Class teacher classes</strong><div class="assignment-checkbox-list" data-edit-classes></div></div>
+              <div class="assignment-field" data-edit-offerings-field><strong>Subject teacher subjects / classes</strong><div class="assignment-checkbox-list" data-edit-offerings></div></div>
             </div>
+            <small class="muted-text">Save replaces this teacher’s class and subject assignments for the selected session and term. Leave both assignment lists empty to remove their assignments.</small>
             <p class="form-message" data-teacher-edit-message role="status" aria-live="polite"></p>
             <div class="header-actions"><button class="ghost-btn" type="button" data-close-teacher-edit>Cancel</button><button class="btn-primary" type="submit">Save changes</button></div>
           </form>
@@ -759,7 +763,6 @@
         </button>
       </nav>
     </div>
-
-
+
   </body>
 </html>

@@ -104,6 +104,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentTeacherRoles = new Set();
   let createTeacherClasses = [];
   let createTeacherOfferings = [];
+  let managementClassAssignments = [];
+  let managementSubjectAssignments = [];
   let sectionAssessmentSettings = [];
   let currentScoreComponents = [];
   let currentScoreOffering = null;
@@ -184,6 +186,244 @@ document.addEventListener('DOMContentLoaded', () => {
     toastTimer = window.setTimeout(() => toast.classList.remove('visible'), 3200);
   };
 
+  let workspaceStorageKey = '';
+  let workspaceState = { fields: {}, openDialogs: [], scoreEditingRows: [] };
+  let workspaceSaveTimer;
+  let workspaceStorageWarningShown = false;
+  let restoredWorkspaceElements = new WeakSet();
+  const restoredWorkspaceDialogs = new Set();
+  const workspaceProtectedForms = new Set(['login-form', 'password-setup-form', 'score-action-form']);
+
+  const workspaceFieldKey = (control) => {
+    if (control.dataset.workspaceKey) return `custom:${control.dataset.workspaceKey}`;
+    if (control.dataset.permissionKey) {
+      return `permission:${permissionTeacher?.value || ''}:${control.dataset.permissionKey}`;
+    }
+    if (control.id) return `id:${control.id}`;
+
+    const form = control.closest('form');
+    if (workspaceProtectedForms.has(form?.id)) return '';
+    const recordId = control.name === 'id' ? '' : form?.querySelector('[name="id"]')?.value;
+    const scope = form?.id
+      ? `form:${form.id}${recordId ? `:record:${recordId}` : ''}`
+      : `page:${control.closest('[data-view]')?.dataset.view || 'global'}`;
+    if (control.name) {
+      if (control.type === 'checkbox' || control.type === 'radio') {
+        return `${scope}:name:${control.name}:value:${control.value}`;
+      }
+      const row = control.closest('tr');
+      const rowIndex = row ? [...row.parentElement.children].indexOf(row) : -1;
+      return `${scope}:name:${control.name}${rowIndex >= 0 ? `:row:${rowIndex}` : ''}`;
+    }
+
+    const parts = [];
+    let node = control;
+    const page = control.closest('[data-view]');
+    while (node && node !== page && node !== main) {
+      const parent = node.parentElement;
+      if (!parent) break;
+      const sameTagSiblings = [...parent.children].filter((child) => child.tagName === node.tagName);
+      parts.unshift(`${node.tagName.toLocaleLowerCase()}:${sameTagSiblings.indexOf(node)}`);
+      node = parent;
+    }
+    return `${scope}:path:${parts.join('/')}`;
+  };
+
+  const isWorkspaceControl = (control) => {
+    const type = control.type?.toLocaleLowerCase();
+    return !workspaceProtectedForms.has(control.closest('form')?.id)
+      && !['password', 'file', 'submit', 'button', 'reset', 'image'].includes(type);
+  };
+
+  const readWorkspaceControl = (control) => {
+    if (control.type === 'checkbox' || control.type === 'radio') {
+      return { checked: control.checked };
+    }
+    if (control instanceof HTMLSelectElement && control.multiple) {
+      return [...control.selectedOptions].map((option) => option.value);
+    }
+    return control.value;
+  };
+
+  const writeWorkspaceControl = (control, value) => {
+    if (control.type === 'checkbox' || control.type === 'radio') {
+      control.checked = Boolean(value?.checked);
+      return true;
+    }
+    if (control instanceof HTMLSelectElement) {
+      if (control.multiple) {
+        const values = Array.isArray(value) ? value : [];
+        if (values.some((item) => ![...control.options].some((option) => option.value === item))) return false;
+        [...control.options].forEach((option) => { option.selected = values.includes(option.value); });
+        return true;
+      }
+      if (value && ![...control.options].some((option) => option.value === value)) return false;
+    }
+    control.value = typeof value === 'string' ? value : '';
+    return true;
+  };
+
+  const initializeWorkspaceState = (profileId) => {
+    const nextStorageKey = `eduresults-workspace-v1:${profileId}`;
+    if (workspaceStorageKey === nextStorageKey) return;
+    if (workspaceStorageKey) persistWorkspaceState();
+    workspaceStorageKey = nextStorageKey;
+    workspaceState = { fields: {}, openDialogs: [], scoreEditingRows: [] };
+    restoredWorkspaceElements = new WeakSet();
+    restoredWorkspaceDialogs.clear();
+    workspaceStorageWarningShown = false;
+    try {
+      const stored = window.localStorage.getItem(workspaceStorageKey);
+      if (!stored) return;
+      const parsed = JSON.parse(stored);
+      if (parsed && typeof parsed === 'object' && parsed.fields && typeof parsed.fields === 'object') {
+        workspaceState = {
+          ...parsed,
+          fields: parsed.fields,
+          openDialogs: Array.isArray(parsed.openDialogs) ? parsed.openDialogs : [],
+          scoreEditingRows: Array.isArray(parsed.scoreEditingRows) ? parsed.scoreEditingRows : []
+        };
+      }
+    } catch (error) {
+      console.error('Could not read this account’s saved workspace draft.', error);
+      showToast('Could not restore saved work from this browser.');
+    }
+  };
+
+  const persistWorkspaceState = () => {
+    if (!workspaceStorageKey) return;
+    window.clearTimeout(workspaceSaveTimer);
+    workspaceSaveTimer = undefined;
+    document.querySelectorAll('input, select, textarea').forEach((control) => {
+      if (!isWorkspaceControl(control)) return;
+      const key = workspaceFieldKey(control);
+      if (key) workspaceState.fields[key] = readWorkspaceControl(control);
+    });
+    const activePage = pages.find((page) => page.classList.contains('active'));
+    if (activePage) workspaceState.page = activePage.dataset.view;
+    workspaceState.openDialogs = [...document.querySelectorAll('dialog[open]')]
+      .filter((dialog) => dialog.id
+        && (!dialog.querySelector('input[type="password"]') || dialog.id === 'teacher-edit-dialog')
+        && !workspaceProtectedForms.has(dialog.querySelector('form')?.id))
+      .map((dialog) => dialog.id);
+    workspaceState.managementPanel =
+      document.querySelector('.management-tab.active')?.dataset.panel || '';
+    workspaceState.permissionRole =
+      document.querySelector('.role-tab.active')?.dataset.role || '';
+    workspaceState.editingStudentId = editingStudentId;
+    workspaceState.scoreEditingRows = [...scoreBody.querySelectorAll('tr[data-editing="true"][data-student-id]')]
+      .map((row) => [
+        scoreClassSelect.value,
+        scoreSessionSelect.value,
+        scoreTermSelect.value,
+        currentScoreOffering?.id || '',
+        row.dataset.studentId
+      ].join(':'));
+    try {
+      window.localStorage.setItem(workspaceStorageKey, JSON.stringify(workspaceState));
+    } catch (error) {
+      console.error('Could not save this account’s workspace draft in this browser.', error);
+      if (!workspaceStorageWarningShown) {
+        workspaceStorageWarningShown = true;
+        showToast('Could not autosave your work in this browser. Check available storage.');
+      }
+    }
+  };
+
+  const scheduleWorkspaceSave = () => {
+    if (!workspaceStorageKey) return;
+    window.clearTimeout(workspaceSaveTimer);
+    workspaceSaveTimer = window.setTimeout(persistWorkspaceState, 150);
+  };
+
+  const restoreWorkspaceFields = (filter = () => true, force = false) => {
+    if (!workspaceStorageKey) return;
+    document.querySelectorAll('input, select, textarea').forEach((control) => {
+      if (!isWorkspaceControl(control) || (!force && restoredWorkspaceElements.has(control)) || !filter(control)) return;
+      const key = workspaceFieldKey(control);
+      if (!key || !Object.hasOwn(workspaceState.fields, key)) return;
+      if (writeWorkspaceControl(control, workspaceState.fields[key])) restoredWorkspaceElements.add(control);
+    });
+  };
+
+  const restoreWorkspaceView = () => {
+    if (workspaceState.page && pageTitles[workspaceState.page]) showPage(workspaceState.page);
+    const panelId = workspaceState.managementPanel;
+    if (panelId && document.getElementById(panelId)?.classList.contains('management-panel')) {
+      document.querySelectorAll('.management-tab').forEach((tab) => {
+        tab.classList.toggle('active', tab.dataset.panel === panelId);
+      });
+      document.querySelectorAll('.management-panel').forEach((panel) => {
+        panel.hidden = panel.id !== panelId;
+      });
+    }
+  };
+
+  const restoreWorkspaceDialogs = () => {
+    workspaceState.openDialogs.forEach((dialogId) => {
+      if (restoredWorkspaceDialogs.has(dialogId)) return;
+      const dialog = document.getElementById(dialogId);
+      if (!dialog || workspaceProtectedForms.has(dialog.querySelector('form')?.id)) return;
+      if (dialog.closest('[data-admin-only]')?.hidden || dialog.open) return;
+
+      const editFormId = {
+        'session-edit-dialog': 'session-edit-form',
+        'class-edit-dialog': 'class-edit-form',
+        'teacher-edit-dialog': 'teacher-edit-form'
+      }[dialogId];
+      if (editFormId) {
+        const recordId = workspaceState.fields[`form:${editFormId}:name:id`];
+        const actionAttribute = {
+          'session-edit-dialog': 'data-edit-session',
+          'class-edit-dialog': 'data-edit-class',
+          'teacher-edit-dialog': 'data-edit-teacher'
+        }[dialogId];
+        const editButton = [...document.querySelectorAll(`[${actionAttribute}]`)]
+          .find((button) => button.getAttribute(actionAttribute) === recordId);
+        if (!editButton) return;
+        restoredWorkspaceDialogs.add(dialogId);
+        editButton.click();
+        return;
+      }
+
+      if (dialog.querySelector('input[type="password"]')) return;
+      restoredWorkspaceDialogs.add(dialogId);
+      dialog.showModal();
+    });
+  };
+
+  const clearWorkspaceForm = (form) => {
+    if (!workspaceStorageKey) return;
+    Object.keys(workspaceState.fields).forEach((key) => {
+      if (key.startsWith(`form:${form.id}:`)) delete workspaceState.fields[key];
+    });
+    [...form.querySelectorAll('input, select, textarea')].forEach((control) => restoredWorkspaceElements.add(control));
+    if (form.id === 'student-form') workspaceState.editingStudentId = '';
+    scheduleWorkspaceSave();
+  };
+
+  const clearWorkspaceControl = (control) => {
+    const key = workspaceFieldKey(control);
+    if (key) delete workspaceState.fields[key];
+    restoredWorkspaceElements.add(control);
+    scheduleWorkspaceSave();
+  };
+
+  document.addEventListener('input', (event) => {
+    if (event.target.matches('input, select, textarea')) scheduleWorkspaceSave();
+  });
+  document.addEventListener('change', (event) => {
+    if (event.target.matches('input, select, textarea')) scheduleWorkspaceSave();
+  });
+  document.addEventListener('submit', scheduleWorkspaceSave, true);
+  document.addEventListener('reset', (event) => {
+    window.setTimeout(() => clearWorkspaceForm(event.target), 0);
+  }, true);
+  document.querySelectorAll('dialog').forEach((dialog) => {
+    dialog.addEventListener('close', scheduleWorkspaceSave);
+  });
+  window.addEventListener('pagehide', persistWorkspaceState);
+
   const showPage = (pageName) => {
     if (!pageTitles[pageName]) return;
     const pageNav = navItems.find((item) => item.dataset.page === pageName);
@@ -201,6 +441,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     title.textContent = pageTitles[pageName][0];
     subtitle.textContent = pageTitles[pageName][1];
+    scheduleWorkspaceSave();
   };
 
   navItems.forEach((item) => item.addEventListener('click', () => {
@@ -857,6 +1098,15 @@ document.addEventListener('DOMContentLoaded', () => {
         input.step = '0.01';
         input.dataset.scoreComponent = component.id;
         input.dataset.countsTowardTotal = String(component.counts_toward_total);
+        input.dataset.workspaceKey = [
+          'score',
+          scoreClassSelect.value,
+          scoreSessionSelect.value,
+          scoreTermSelect.value,
+          currentScoreOffering?.id || '',
+          student.id,
+          component.id
+        ].join(':');
         const savedScore = result?.result_component_scores?.find((saved) => {
           if (saved.assessment_component_id === component.id) return true;
           const savedComponent = result.assessment_schemes?.assessment_components
@@ -913,6 +1163,19 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       row.append(total, grade, status, actions);
       scoreBody.append(row);
+      const editingKey = [
+        scoreClassSelect.value,
+        scoreSessionSelect.value,
+        scoreTermSelect.value,
+        currentScoreOffering?.id || '',
+        student.id
+      ].join(':');
+      if (workspaceState.scoreEditingRows?.includes(editingKey)) {
+        row.dataset.editing = 'true';
+        scoreInputsForRow(row).forEach((input) => { input.disabled = false; });
+        const editButton = row.querySelector('[data-edit-score-row]');
+        if (editButton) editButton.textContent = 'Cancel';
+      }
       updateScoreRowSummary(row);
     });
   };
@@ -941,6 +1204,9 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       await loadTerms(sessionId, scoreTermSelect, () => requestId === scoreRequestId);
       if (requestId !== scoreRequestId) return;
+      restoreWorkspaceFields((control) =>
+        control === scoreClassSelect || control === scoreSessionSelect || control === scoreTermSelect
+        || control === scoreSubjectSelect);
       const { data: offerings, error: offeringError } = await supabase
         .from('class_subject_offerings')
         .select('id, class_id, academic_session_id, subject_id, subjects (id, name), classes (stage), assessment_schemes (id, name, is_current, assessment_components (id, code, name, max_score, display_order, is_required, counts_toward_total))')
@@ -971,6 +1237,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const oldSubjectId = scoreSubjectSelect.value;
       scoreSubjectSelect.replaceChildren();
       configuredOfferings.forEach((item) => addSelectOption(scoreSubjectSelect, item.id, item.subjects?.name || 'Subject'));
+      restoreWorkspaceFields((control) => control === scoreSubjectSelect);
       const selectedSubjectId = pendingScoreOfferingId || oldSubjectId;
       if (configuredOfferings.some((item) => item.id === selectedSubjectId)) scoreSubjectSelect.value = selectedSubjectId;
       currentScoreOffering = configuredOfferings.find((item) => item.id === scoreSubjectSelect.value) || configuredOfferings[0] || null;
@@ -1033,6 +1300,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentScoreComponents,
         gradingBands
       );
+      restoreWorkspaceFields((control) => control.matches('[data-score-component]'));
       const maximum = currentScoreComponents.filter((item) => item.counts_toward_total)
         .reduce((sum, item) => sum + Number(item.max_score), 0);
       document.querySelector('[data-score-scheme]').textContent =
@@ -1099,12 +1367,14 @@ document.addEventListener('DOMContentLoaded', () => {
         delete row.dataset.editing;
         editButton.textContent = 'Edit';
         updateScoreRowSummary(row);
+        scheduleWorkspaceSave();
         return;
       }
 
       row.dataset.editing = 'true';
       scoreInputsForRow(row).forEach((input) => { input.disabled = false; });
       editButton.textContent = 'Cancel';
+      scheduleWorkspaceSave();
       return;
     }
 
@@ -1358,6 +1628,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       await loadTerms(sessionId, masterTermSelect, () => requestId === masterRequestId);
       if (requestId !== masterRequestId) return;
+      restoreWorkspaceFields((control) => control === masterTermSelect);
       const termId = masterTermSelect.value;
       if (!termId) {
         document.querySelector('[data-master-head]').replaceChildren();
@@ -1440,6 +1711,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       await loadTerms(sessionId, resultTermSelect, () => requestId === resultRequestId);
       if (requestId !== resultRequestId) return;
+      restoreWorkspaceFields((control) => control === resultTermSelect);
       const termId = resultTermSelect.value;
       const { data: enrollments, error: enrollmentError } = await supabase
         .from('class_enrollments')
@@ -1454,6 +1726,7 @@ document.addEventListener('DOMContentLoaded', () => {
       (enrollments || []).filter((item) => item.students).forEach(({ students: student }) =>
         addSelectOption(resultStudentSelect, student.id,
           `${student.first_name} ${student.other_names || ''} ${student.last_name}`.replace(/\s+/g, ' ').trim()));
+      restoreWorkspaceFields((control) => control === resultStudentSelect);
       if ([...resultStudentSelect.options].some((option) => option.value === previousStudentId)) {
         resultStudentSelect.value = previousStudentId;
       }
@@ -1629,6 +1902,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const failed = profilesResult.error || teacherRolesResult.error || classAssignmentsResult.error || subjectAssignmentsResult.error
         || offeringsResult.error || gradingResult.error || sectionSettingsResult.error;
       if (failed) throw failed;
+      managementClassAssignments = classAssignmentsResult.data || [];
+      managementSubjectAssignments = subjectAssignmentsResult.data || [];
       sectionAssessmentSettings = sectionSettingsResult.data || [];
       const teacherRoles = new Map();
       (teacherRolesResult.data || []).forEach((item) => {
@@ -1845,6 +2120,11 @@ document.addEventListener('DOMContentLoaded', () => {
         ? ''
         : 'No grading scale exists yet. Add at least one grade band, then save.';
       setScreenNotice('[data-management-notice]', '');
+      restoreWorkspaceFields();
+      refreshCreateTeacherAssignments();
+      restoreWorkspaceView();
+      restoreWorkspaceDialogs();
+      if (permissionTeacher?.value) void loadPermissions();
     } catch (error) {
       showDataError('Loading teachers and subjects', error, (message) => setScreenNotice('[data-management-notice]', message));
     }
@@ -1978,7 +2258,9 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       if (error) throw error;
       await Promise.all([loadManagementData(), loadScoreScreen()]);
-      form.querySelector('[name="subject_name"]').value = '';
+      const subjectNameInput = form.querySelector('[name="subject_name"]');
+      subjectNameInput.value = '';
+      clearWorkspaceControl(subjectNameInput);
       message.textContent = `${subjectName} added or updated in ${addedCount} active class(es) in ${groupLabel} for the selected session, using the section-wide assessment scheme.`;
     } catch (error) {
       showDataError('Adding the subject', error, (text) => { message.textContent = text; });
@@ -2006,6 +2288,7 @@ document.addEventListener('DOMContentLoaded', () => {
         stage: values.get('stage')
       }).eq('id', values.get('id'));
       if (error) throw error;
+      clearWorkspaceForm(form);
       document.querySelector('#class-edit-dialog').close();
       showToast('Class details updated.');
       await refreshLiveData(currentProfile);
@@ -2024,28 +2307,36 @@ document.addEventListener('DOMContentLoaded', () => {
     const message = document.querySelector('[data-teacher-edit-message]');
     const submit = form.querySelector('[type="submit"]');
     const roles = [...form.querySelectorAll('[name="roles"]:checked')].map((input) => input.value);
+    const classIds = [...form.querySelectorAll('[data-edit-classes] input:checked')].map((input) => input.value);
+    const offeringIds = [...form.querySelectorAll('[data-edit-offerings] input:checked')].map((input) => input.value);
+    const sessionId = form.querySelector('[data-edit-session]').value || null;
+    const termId = form.querySelector('[data-edit-term]').value || null;
+    const password = String(values.get('password') || '');
     if (!roles.length) {
       message.textContent = 'Select at least one teacher role.';
       return;
     }
+    if ((classIds.length || offeringIds.length) && (!sessionId || !termId)) {
+      message.textContent = 'Choose an assignment session and term for the selected classes or subjects.';
+      return;
+    }
+    if (password && password !== String(values.get('confirm_password') || '')) {
+      message.textContent = 'The new password entries do not match.';
+      return;
+    }
     submit.disabled = true;
     try {
-      const { error } = await supabase.from('profiles').update({
-        full_name: String(values.get('full_name')).trim(),
-        role: roles[0]
-      }).eq('id', values.get('id')).neq('role', 'administrator');
+      const { error } = await supabase.rpc('admin_update_teacher_assignments', {
+        p_teacher_id: values.get('id'),
+        p_full_name: String(values.get('full_name')).trim(),
+        p_roles: roles,
+        p_class_ids: classIds,
+        p_offering_ids: offeringIds,
+        p_academic_session_id: sessionId,
+        p_term_id: termId
+      });
       if (error) throw error;
-      const { error: clearRolesError } = await supabase.from('teacher_roles')
-        .delete().eq('teacher_id', values.get('id'));
-      if (clearRolesError) throw clearRolesError;
-      const { error: addRolesError } = await supabase.from('teacher_roles')
-        .insert(roles.map((role) => ({ teacher_id: values.get('id'), role })));
-      if (addRolesError) throw addRolesError;
-      const password = String(values.get('password') || '');
       if (password) {
-        if (password !== String(values.get('confirm_password') || '')) {
-          throw new Error('The new password entries do not match.');
-        }
         const { data, error: passwordError } = await invokeTeacherManagement({
           action: 'reset_password',
           teacher_id: values.get('id'),
@@ -2054,8 +2345,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (passwordError) throw passwordError;
         if (data?.error) throw new Error(data.error);
       }
+      clearWorkspaceForm(form);
       document.querySelector('#teacher-edit-dialog').close();
-      showToast(password ? 'Teacher profile and password updated.' : 'Teacher profile updated.');
+      showToast(password
+        ? 'Teacher profile, roles, assignments, and password updated.'
+        : 'Teacher profile, roles, and assignments updated.');
       await loadManagementData();
     } catch (error) {
       showDataError('Updating the teacher profile', error, (text) => { message.textContent = text; });
@@ -2231,6 +2525,96 @@ document.addEventListener('DOMContentLoaded', () => {
     refreshCreateTeacherAssignments();
   });
 
+  const refreshEditTeacherAssignments = () => {
+    const form = document.querySelector('#teacher-edit-form');
+    const roles = new Set([...form.querySelectorAll('[name="roles"]:checked')].map((input) => input.value));
+    const stages = new Set();
+    if (roles.has('secondary_class_teacher') || roles.has('secondary_subject_teacher')) stages.add('secondary');
+    if (roles.has('primary_teacher')) stages.add('primary');
+    if (roles.has('nursery_teacher')) stages.add('nursery');
+    const classList = form.querySelector('[data-edit-classes]');
+    const offeringList = form.querySelector('[data-edit-offerings]');
+    const sessionId = form.querySelector('[data-edit-session]').value;
+    const selectedClasses = new Set([...classList.querySelectorAll('input:checked')].map((input) => input.value));
+    const selectedOfferings = new Set([...offeringList.querySelectorAll('input:checked')].map((input) => input.value));
+    const hasClassRole = roles.has('secondary_class_teacher') || roles.has('primary_teacher') || roles.has('nursery_teacher');
+    const hasSubjectRole = roles.has('secondary_subject_teacher') || roles.has('primary_teacher') || roles.has('nursery_teacher');
+    form.querySelector('[data-edit-classes-field]').hidden = !hasClassRole;
+    form.querySelector('[data-edit-offerings-field]').hidden = !hasSubjectRole;
+    const renderCheckboxOptions = (container, items, selected, name, getLabel) => {
+      container.replaceChildren();
+      items.forEach((item) => {
+        const label = document.createElement('label');
+        label.className = 'assignment-checkbox-option';
+        const input = document.createElement('input');
+        input.type = 'checkbox';
+        input.name = name;
+        input.value = item.id;
+        input.checked = selected.has(item.id);
+        const text = document.createElement('span');
+        text.textContent = getLabel(item);
+        label.append(input, text);
+        container.append(label);
+      });
+    };
+    renderCheckboxOptions(
+      classList,
+      hasClassRole ? createTeacherClasses.filter((item) => stages.has(item.stage)) : [],
+      selectedClasses,
+      'class_ids',
+      (item) => item.name
+    );
+    renderCheckboxOptions(
+      offeringList,
+      hasSubjectRole
+        ? createTeacherOfferings.filter((item) =>
+          stages.has(item.classes?.stage)
+          && (!sessionId || item.academic_session_id === sessionId)
+        )
+        : [],
+      selectedOfferings,
+      'offering_ids',
+      (item) => `${item.subjects.name} · ${item.classes?.name} (${item.academic_sessions?.name})`
+    );
+  };
+
+  const openEditTeacherAssignments = async (teacherId) => {
+    const form = document.querySelector('#teacher-edit-form');
+    const classAssignments = managementClassAssignments.filter((item) => item.teacher_id === teacherId);
+    const subjectAssignments = managementSubjectAssignments.filter((item) => item.teacher_id === teacherId);
+    const firstSubjectOffering = createTeacherOfferings.find((item) =>
+      item.id === subjectAssignments[0]?.class_subject_offering_id);
+    const sessionId = classAssignments[0]?.academic_session_id || firstSubjectOffering?.academic_session_id || '';
+    const termId = classAssignments[0]?.term_id || subjectAssignments[0]?.term_id || '';
+    const sessionOptions = currentSessions.filter((session) =>
+      session.is_active || session.id === sessionId
+    );
+    replaceSelectOptions(form.querySelector('[data-edit-session]'), sessionOptions, (item) => item.name, sessionId);
+    await loadTerms(sessionId, form.querySelector('[data-edit-term]'));
+    if (termId && [...form.querySelector('[data-edit-term]').options].some((option) => option.value === termId)) {
+      form.querySelector('[data-edit-term]').value = termId;
+    }
+    refreshEditTeacherAssignments();
+    const classIds = new Set(classAssignments.map((item) => item.class_id));
+    const offeringIds = new Set(subjectAssignments.map((item) => item.class_subject_offering_id));
+    [...form.querySelectorAll('[data-edit-classes] input')].forEach((input) => {
+      input.checked = classIds.has(input.value);
+    });
+    [...form.querySelectorAll('[data-edit-offerings] input')].forEach((input) => {
+      input.checked = offeringIds.has(input.value);
+    });
+  };
+
+  document.querySelectorAll('#teacher-edit-form [name="roles"]').forEach((input) =>
+    input.addEventListener('change', refreshEditTeacherAssignments));
+  document.querySelector('[data-edit-session]')?.addEventListener('change', async (event) => {
+    const form = document.querySelector('#teacher-edit-form');
+    form.querySelector('[data-edit-classes]').replaceChildren();
+    form.querySelector('[data-edit-offerings]').replaceChildren();
+    await loadTerms(event.target.value, form.querySelector('[data-edit-term]'));
+    refreshEditTeacherAssignments();
+  });
+
   const showManagementActionError = (message, error) => {
     showDataError('Saving the management change', error, (text) => {
       message.textContent = text;
@@ -2272,6 +2656,7 @@ document.addEventListener('DOMContentLoaded', () => {
       form.querySelector('[name="active_term"]').value =
         String(terms?.find((term) => term.is_active)?.term_number || 1);
       form.querySelector('[name="make_current"]').checked = Boolean(session.is_current);
+      restoreWorkspaceFields((control) => control.closest('form') === form, true);
       document.querySelector('[data-session-edit-message]').textContent = '';
       document.querySelector('#session-edit-dialog').showModal();
       return;
@@ -2347,6 +2732,7 @@ document.addEventListener('DOMContentLoaded', () => {
       form.querySelector('[name="id"]').value = schoolClass.id;
       form.querySelector('[name="name"]').value = schoolClass.name;
       form.querySelector('[name="stage"]').value = schoolClass.stage;
+      restoreWorkspaceFields((control) => control.closest('form') === form, true);
       document.querySelector('[data-class-edit-message]').textContent = '';
       document.querySelector('#class-edit-dialog').showModal();
       return;
@@ -2383,6 +2769,12 @@ document.addEventListener('DOMContentLoaded', () => {
       form.querySelectorAll('[name="roles"]').forEach((input) => {
         input.checked = selectedRoles.includes(input.value);
       });
+      form.querySelector('[name="password"]').value = '';
+      form.querySelector('[name="confirm_password"]').value = '';
+      await openEditTeacherAssignments(button.dataset.editTeacher);
+      restoreWorkspaceFields((control) => control.closest('form') === form, true);
+      refreshEditTeacherAssignments();
+      restoreWorkspaceFields((control) => control.closest('form') === form, true);
       document.querySelector('[data-teacher-edit-message]').textContent = '';
       document.querySelector('#teacher-edit-dialog').showModal();
       return;
@@ -2705,6 +3097,18 @@ document.addEventListener('DOMContentLoaded', () => {
       studentSessionSelect, scoreSessionSelect, masterSessionSelect,
       resultSessionSelect
     ].forEach(copySessionOptions);
+    restoreWorkspaceFields();
+    [
+      [studentClassSelect, studentSessionSelect],
+      [scoreClassSelect, scoreSessionSelect],
+      [masterClassSelect, masterSessionSelect],
+      [resultClassSelect, resultSessionSelect]
+    ].forEach(([classSelect, sessionSelect]) => {
+      copySessionOptions(sessionSelect);
+      restoreWorkspaceFields((control) => control === sessionSelect);
+    });
+    restoreWorkspaceView();
+    restoreWorkspaceDialogs();
     void loadManagementData();
     if (!studentClassSelect.options.length || !studentSessionSelect.options.length) {
       renderStudents([]);
@@ -2905,6 +3309,7 @@ document.addEventListener('DOMContentLoaded', () => {
         p_make_current: values.get('make_current') === 'on'
       });
       if (error) throw error;
+      clearWorkspaceForm(form);
       document.querySelector('#session-edit-dialog').close();
       showToast('Academic session updated.');
       await refreshLiveData(currentProfile);
@@ -3213,10 +3618,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     selectedTeacherRoles = new Set((roleRows || []).map((row) => row.role));
     refreshPermissionRoleUI();
+    const savedRoleTab = [...document.querySelectorAll('.role-tab')]
+      .find((tab) => tab.dataset.role === workspaceState.permissionRole && !tab.hidden);
+    if (savedRoleTab) {
+      document.querySelectorAll('.role-tab').forEach((tab) => {
+        const selected = tab === savedRoleTab;
+        tab.classList.toggle('active', selected);
+        tab.setAttribute('aria-selected', String(selected));
+      });
+      const details = roleDetails[savedRoleTab.dataset.role];
+      permissionTitle.textContent = details.title;
+      permissionDescription.textContent = details.description;
+    }
     const saved = new Map((data || []).map((item) => [item.permission_key, item.allowed]));
     permissionInputs.forEach((input) => {
       input.checked = !input.disabled && saved.get(input.dataset.permissionKey) === true;
     });
+    restoreWorkspaceFields((control) => Boolean(control.dataset.permissionKey), true);
     permissionMessage.textContent = '';
   };
   document.querySelector('[data-save-permissions]')?.addEventListener('click', async () => {
@@ -3253,6 +3671,7 @@ document.addEventListener('DOMContentLoaded', () => {
       permissionTitle.textContent = details.title;
       permissionDescription.textContent = details.description;
       void loadPermissions();
+      scheduleWorkspaceSave();
     });
   });
   permissionTeacher?.addEventListener('change', () => void loadPermissions());
@@ -3263,6 +3682,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.querySelectorAll('.management-panel').forEach((panel) => {
         panel.hidden = panel.id !== tab.dataset.panel;
       });
+      scheduleWorkspaceSave();
     });
   });
 
@@ -3298,6 +3718,13 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const setAuthenticatedUser = (profile) => {
+    initializeWorkspaceState(profile.id);
+    editingStudentId = workspaceState.editingStudentId || '';
+    if (editingStudentId) {
+      document.querySelector('#student-dialog-title').textContent = 'Edit student';
+      studentForm.querySelector('.muted-text').textContent = 'Correct this student’s register details.';
+      studentForm.querySelector('[type="submit"]').textContent = 'Save changes';
+    }
     currentProfile = profile;
     const displayName = profile.full_name || 'School user';
     const displayRole = profile.role.replaceAll('_', ' ');
@@ -3316,6 +3743,9 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const lockApp = (message) => {
+    persistWorkspaceState();
+    workspaceStorageKey = '';
+    editingStudentId = '';
     currentProfile = null;
     dataRequest += 1;
     currentStudents = [];
