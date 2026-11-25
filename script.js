@@ -55,6 +55,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const studentDialog = document.querySelector('#student-dialog');
   const studentForm = document.querySelector('#student-form');
   const studentFormMessage = document.querySelector('[data-student-form-message]');
+  const studentStreamSetup = document.querySelector('[data-student-stream-setup]');
+  const studentDivisionSelect = document.querySelector('[data-student-division]');
+  const studentSubjectChoice = document.querySelector('[data-student-subject-choice]');
+  const studentSubjectInstructions = document.querySelector('[data-student-subject-instructions]');
+  const studentSubjectOptions = document.querySelector('[data-student-subject-options]');
+  const studentSubjectCount = document.querySelector('[data-student-subject-count]');
   const classCards = document.querySelector('[data-live-class-cards]');
   const dashboardClassCards = document.querySelector('[data-dashboard-class-cards]');
   const subjectCards = document.querySelector('[data-live-subject-cards]');
@@ -72,6 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const masterClassSelect = document.querySelector('#master-class-select');
   const masterSessionSelect = document.querySelector('#master-session-select');
   const masterTermSelect = document.querySelector('#master-term-select');
+  const masterTablesContainer = document.querySelector('[data-master-tables]');
   const resultClassSelect = document.querySelector('#result-class-select');
   const resultSessionSelect = document.querySelector('#result-session-select');
   const resultTermSelect = document.querySelector('#result-term-select');
@@ -91,6 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentStudents = [];
   let studentRegisterCanManage = false;
   let editingStudentId = '';
+  let studentStreamOfferings = [];
   let currentClasses = [];
   let currentClassesAll = [];
   let currentScoreClasses = [];
@@ -652,6 +660,110 @@ document.addEventListener('DOMContentLoaded', () => {
       defaultId);
   };
 
+  const isSeniorStreamClass = (classId) => {
+    const className = currentClassesAll.find((item) => item.id === classId)?.name
+      || (studentClassSelect.value === classId ? studentClassSelect.selectedOptions[0]?.textContent : '')
+      || '';
+    return /^SSS\s*[23](?:\D.*)?$/i.test(className.trim());
+  };
+
+  const updateStudentSubjectCount = () => {
+    const selectedElectives = studentSubjectOptions.querySelectorAll(
+      'input[data-elective]:checked'
+    ).length;
+    const requiredElectives = studentDivisionSelect.value === 'arts' ? 1 : 2;
+    studentSubjectCount.textContent = studentDivisionSelect.value
+      ? `${selectedElectives} of ${requiredElectives} optional subject${requiredElectives === 1 ? '' : 's'} selected`
+      : '';
+    studentSubjectChoice.dataset.optionalCount = String(selectedElectives);
+    studentSubjectOptions.querySelectorAll('input[data-elective]:not(:checked)').forEach((input) => {
+      input.disabled = selectedElectives >= requiredElectives;
+    });
+  };
+
+  const renderStudentSubjectChoices = (division, selectedIds = []) => {
+    studentSubjectOptions.replaceChildren();
+    const eligibleOfferings = studentStreamOfferings.filter((offering) =>
+      (offering.senior_secondary_eligible_streams || []).includes(division));
+    const coreOfferings = eligibleOfferings.filter((offering) =>
+      offering.senior_secondary_group === 'core');
+    const streamOfferings = eligibleOfferings.filter((offering) =>
+      offering.senior_secondary_group === division);
+    const optionalOfferings = eligibleOfferings.filter((offering) =>
+      offering.senior_secondary_group === 'optional');
+    const requiredStreamCount = division === 'arts' ? 3 : 2;
+    const requiredOptionalCount = division === 'arts' ? 1 : 2;
+    studentSubjectChoice.hidden = !division;
+    if (!division) return;
+    studentSubjectChoice.dataset.coreCount = String(coreOfferings.length);
+    studentSubjectChoice.dataset.streamCount = String(streamOfferings.length);
+    studentSubjectInstructions.textContent = division === 'arts'
+      ? 'The five general subjects and three Arts subjects are included. Choose one optional subject.'
+      : 'The five general subjects and two Science subjects are included. Choose two optional subjects.';
+    if (coreOfferings.length !== 5 || streamOfferings.length !== requiredStreamCount
+      || optionalOfferings.length < requiredOptionalCount) {
+      studentFormMessage.textContent =
+        'Configure all required SSS 2/3 subjects and enough optional subjects before assigning student choices.';
+    }
+
+    [...coreOfferings, ...streamOfferings, ...optionalOfferings].forEach((offering) => {
+      const group = offering.senior_secondary_group;
+      const isRequired = group === 'core' || group === division;
+      const label = document.createElement('label');
+      label.className = 'student-subject-option';
+      const input = document.createElement('input');
+      input.type = 'checkbox';
+      input.value = offering.id;
+      input.checked = isRequired || selectedIds.includes(offering.id);
+      input.disabled = isRequired;
+      if (group === 'optional') input.dataset.elective = '';
+      const name = document.createElement('span');
+      const category = group === 'core' ? 'General' : group === 'optional' ? 'Optional' : division === 'arts' ? 'Arts' : 'Science';
+      name.textContent = `${offering.subjects?.name || 'Subject'} · ${category}`;
+      label.append(input, name);
+      studentSubjectOptions.append(label);
+    });
+    updateStudentSubjectCount();
+  };
+
+  const loadStudentSubjectChoices = async (studentId = '') => {
+    studentStreamOfferings = [];
+    if (!isSeniorStreamClass(studentClassSelect.value)) {
+      studentStreamSetup.hidden = true;
+      studentSubjectOptions.replaceChildren();
+      studentDivisionSelect.value = '';
+      return;
+    }
+
+    studentStreamSetup.hidden = false;
+    const { data: offerings, error: offeringsError } = await supabase
+      .from('class_subject_offerings')
+      .select('id, senior_secondary_group, senior_secondary_eligible_streams, subjects (name)')
+      .eq('class_id', studentClassSelect.value)
+      .eq('academic_session_id', studentSessionSelect.value)
+      .eq('is_active', true)
+      .order('created_at');
+    if (offeringsError) throw offeringsError;
+    studentStreamOfferings = offerings || [];
+    let selectedIds = [];
+    if (studentId) {
+      const { data: selections, error: selectionError } = await supabase
+        .from('student_subject_selections')
+        .select('class_subject_offering_id')
+        .eq('student_id', studentId)
+        .eq('class_id', studentClassSelect.value)
+        .eq('academic_session_id', studentSessionSelect.value);
+      if (selectionError) throw selectionError;
+      selectedIds = (selections || []).map((selection) => selection.class_subject_offering_id);
+    }
+
+    renderStudentSubjectChoices(studentDivisionSelect.value, selectedIds);
+  };
+
+  const selectedStudentSubjectIds = () => [
+    ...studentSubjectOptions.querySelectorAll('input:checked')
+  ].map((input) => input.value);
+
   const clearTable = (tableBody, message, columnCount) => {
     tableBody.replaceChildren();
     const row = document.createElement('tr');
@@ -830,12 +942,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!students.length) {
       const row = document.createElement('tr');
       const cell = document.createElement('td');
-      cell.colSpan = 7;
+      cell.colSpan = 8;
       cell.textContent = 'No students are enrolled in this class for the selected session yet.';
       row.append(cell);
       studentTableBody.append(row);
     } else {
-      students.forEach(({ enrolled_on: enrolledOn, left_on: leftOn, students: student }, index) => {
+      students.forEach(({ enrolled_on: enrolledOn, left_on: leftOn, division, student_subject_selections: selections, students: student }, index) => {
         if (!student) return;
         const row = document.createElement('tr');
         row.dataset.studentRow = '';
@@ -856,6 +968,13 @@ document.addEventListener('DOMContentLoaded', () => {
         genderCell.textContent = student.gender
           ? student.gender.charAt(0).toLocaleUpperCase() + student.gender.slice(1)
           : '—';
+        const divisionCell = document.createElement('td');
+        if (isSeniorStreamClass(studentClassSelect.value)) {
+          const subjectCount = selections?.length || 0;
+          divisionCell.textContent = `${division ? division.charAt(0).toLocaleUpperCase() + division.slice(1) : 'Not assigned'} · ${subjectCount}/9 subjects`;
+        } else {
+          divisionCell.textContent = '—';
+        }
         const enrolledCell = document.createElement('td');
         enrolledCell.textContent = enrolledOn ? new Date(`${enrolledOn}T00:00:00`).toLocaleDateString() : '—';
         const statusCell = document.createElement('td');
@@ -878,7 +997,7 @@ document.addEventListener('DOMContentLoaded', () => {
         deleteButton.disabled = currentProfile?.role !== 'administrator' && !studentRegisterCanManage;
         deleteButton.setAttribute('aria-label', `Permanently delete ${fullName}`);
         actionsCell.append(editButton, deleteButton);
-        row.append(serialCell, nameCell, admissionCell, genderCell, enrolledCell, statusCell, actionsCell);
+        row.append(serialCell, nameCell, admissionCell, genderCell, divisionCell, enrolledCell, statusCell, actionsCell);
         studentTableBody.append(row);
       });
     }
@@ -928,7 +1047,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const { data, error } = await supabase
         .from('class_enrollments')
-        .select('enrolled_on, left_on, students (id, admission_number, first_name, last_name, other_names, gender, date_of_birth, is_active)')
+        .select('enrolled_on, left_on, division, student_subject_selections (class_subject_offering_id), students (id, admission_number, first_name, last_name, other_names, gender, date_of_birth, is_active)')
         .eq('class_id', classId)
         .eq('academic_session_id', sessionId)
         .order('enrolled_on');
@@ -1275,9 +1394,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
       currentScoreComponents = currentScoreOffering.currentScheme.assessment_components
         .sort((a, b) => a.display_order - b.display_order);
-      const [enrollmentResult, resultsResult, gradingResult] = await Promise.all([
+      const streamClass = isSeniorStreamClass(classId);
+      const [enrollmentResult, resultsResult, gradingResult, selectedSubjectsResult] = await Promise.all([
         supabase.from('class_enrollments')
-          .select('student_id, left_on, students (id, first_name, last_name, other_names, is_active)')
+          .select('student_id, left_on, division, students (id, first_name, last_name, other_names, is_active)')
           .eq('class_id', classId)
           .eq('academic_session_id', sessionId)
           .order('enrolled_on'),
@@ -1287,15 +1407,28 @@ document.addEventListener('DOMContentLoaded', () => {
           .eq('term_id', scoreTermSelect.value),
         supabase.from('grading_bands')
           .select('grade, minimum_score, maximum_score, grading_scales!inner (is_active)')
-          .eq('grading_scales.is_active', true)
+          .eq('grading_scales.is_active', true),
+        streamClass
+          ? supabase.from('student_subject_selections')
+            .select('student_id')
+            .eq('class_id', classId)
+            .eq('academic_session_id', sessionId)
+            .eq('class_subject_offering_id', currentScoreOffering.id)
+          : Promise.resolve({ data: [], error: null })
       ]);
       if (requestId !== scoreRequestId) return;
-      const failed = enrollmentResult.error || resultsResult.error || gradingResult.error;
+      const failed = enrollmentResult.error || resultsResult.error || gradingResult.error
+        || selectedSubjectsResult.error;
       if (failed) throw failed;
       const gradingBands = (gradingResult.data || []).sort((a, b) =>
         Number(a.minimum_score) - Number(b.minimum_score));
+      const subjectStudents = new Set((selectedSubjectsResult.data || []).map((item) => item.student_id));
+      const enrollments = await hydrateEnrollmentStudents(enrollmentResult.data || []);
+      const scoreEnrollments = streamClass
+        ? enrollments.filter((enrollment) => subjectStudents.has(enrollment.student_id))
+        : enrollments;
       renderScoreTable(
-        await hydrateEnrollmentStudents(enrollmentResult.data || []),
+        scoreEnrollments,
         resultsResult.data || [],
         currentScoreComponents,
         gradingBands
@@ -1538,70 +1671,174 @@ document.addEventListener('DOMContentLoaded', () => {
     void refreshDashboard(currentProfile, dataRequest);
   });
 
-  const renderMasterSheet = (standings, offerings, calculationsByStudentSubject, stage) => {
-    const head = document.querySelector('[data-master-head]');
-    const body = document.querySelector('[data-master-body]');
+  const renderMasterSheet = (standings, offerings, calculationsByStudentSubject, selectedSubjectsByStudent, stage, className) => {
     const statisticBar = document.querySelector('[data-master-statistics]');
-    head.replaceChildren();
-    body.replaceChildren();
+    const streamClass = /^SSS\s*[23](?:\D.*)?$/i.test(className || '');
+    masterTablesContainer.replaceChildren();
 
-    const header = document.createElement('tr');
-    ['#', 'Student'].forEach((label) => {
-      const cell = document.createElement('th');
-      cell.textContent = label;
-      header.append(cell);
-    });
-    offerings.forEach((offering) => {
-      const cell = document.createElement('th');
-      cell.textContent = offering.subjects?.name || 'Subject';
-      header.append(cell);
-    });
-    ['Grand total', 'Average', 'Position', 'Status'].forEach((label) => {
-      const cell = document.createElement('th');
-      cell.textContent = label;
-      header.append(cell);
-    });
-    head.append(header);
+    const makeTable = (division = '') => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'table-wrap master-table-wrap';
+      const table = document.createElement('table');
+      table.className = 'master-table';
+      const head = document.createElement('thead');
+      const body = document.createElement('tbody');
+      table.append(head, body);
+      wrapper.append(table);
+      if (division) {
+        const title = document.createElement('h3');
+        title.className = 'master-division-title';
+        title.textContent = `${division.charAt(0).toLocaleUpperCase()}${division.slice(1)} division`;
+        masterTablesContainer.append(title);
+      }
+      masterTablesContainer.append(wrapper);
+      return { head, body };
+    };
 
-    if (!standings.length) {
-      clearTable(body, 'No students or results are available for this class, session, and term.', offerings.length + 6);
-      statisticBar.replaceChildren();
-      return;
+    const makeHeader = (labels) => {
+      const header = document.createElement('tr');
+      labels.forEach((label) => header.append(scoreCell(label)));
+      return header;
+    };
+    const formatSubjectScore = (calculation, subjectName = '') => {
+      const score = calculation?.is_complete && calculation.subject_total !== null
+        ? `${calculation.subject_total}${calculation.grade ? ` (${calculation.grade})` : ''}`
+        : '—';
+      return subjectName ? `${subjectName}: ${score}` : score;
+    };
+
+    if (!streamClass) {
+      const { head, body } = makeTable();
+      head.append(makeHeader([
+        '#', 'Student',
+        ...offerings.map((offering) => offering.subjects?.name || 'Subject'),
+        'Grand total', 'Average', 'Position', 'Status'
+      ]));
+      if (!standings.length) {
+        clearTable(body, 'No students or results are available for this class, session, and term.', offerings.length + 6);
+      } else {
+        standings.forEach((standing, index) => {
+          const studentSubjectResults = calculationsByStudentSubject.get(standing.student_id) || new Map();
+          const row = [
+            String(index + 1),
+            standing.student_name || standing.admission_number || 'Student'
+          ];
+          offerings.forEach((offering) => {
+            const calculation = studentSubjectResults.get(offering.id);
+            const componentCount = Object.keys(calculation?.component_scores || {}).length;
+            const subjectAverage = ['primary', 'nursery'].includes(stage) && componentCount
+              ? Number(calculation.subject_total) / componentCount
+              : calculation?.subject_total;
+            row.push(calculation?.is_complete && calculation.subject_total !== null
+              ? `${['primary', 'nursery'].includes(stage) ? subjectAverage.toFixed(1) : subjectAverage}${calculation.grade ? ` (${calculation.grade})` : ''}`
+              : '—');
+          });
+          row.push(
+            standing.grand_total ?? '—',
+            standing.average_score === null ? '—' : Number(standing.average_score).toFixed(1),
+            standing.position ?? '—',
+            standing.is_complete ? 'Complete' : 'Incomplete'
+          );
+          const tableRow = document.createElement('tr');
+          row.forEach((value) => tableRow.append(scoreCell(String(value))));
+          body.append(tableRow);
+        });
+      }
+    } else {
+      ['arts', 'science'].forEach((division) => {
+        const { head, body } = makeTable(division);
+        const streamSubjects = offerings.filter((offering) =>
+          offering.senior_secondary_group === division);
+        const generalSubjects = offerings.filter((offering) =>
+          offering.senior_secondary_group === 'core');
+        const generalColumns = [
+          ...generalSubjects,
+          ...Array.from({ length: Math.max(0, 5 - generalSubjects.length) },
+            (_, index) => `General subject ${generalSubjects.length + index + 1}`)
+        ];
+        const expectedStreamSubjects = division === 'arts' ? 3 : 2;
+        const streamColumns = [
+          ...streamSubjects,
+          ...Array.from({ length: Math.max(0, expectedStreamSubjects - streamSubjects.length) },
+            (_, index) => `${division === 'arts' ? 'Arts' : 'Science'} subject ${streamSubjects.length + index + 1}`)
+        ];
+        const optionalCount = division === 'arts' ? 1 : 2;
+        const subjectColumns = [
+          ...generalColumns,
+          ...streamColumns,
+          ...Array.from({ length: optionalCount }, (_, index) => `Optional subject ${index + 1}`)
+        ];
+        head.append(makeHeader([
+          '#', 'Student',
+          ...subjectColumns.map((offering) =>
+            typeof offering === 'string' ? offering : offering.subjects?.name || 'Subject'),
+          'Grand total', 'Average', 'Position', 'Status'
+        ]));
+        const group = standings.filter((standing) => standing.division === division);
+        if (!group.length) {
+          clearTable(body, `No ${division} students have been assigned yet.`, subjectColumns.length + 6);
+          return;
+        }
+        group.forEach((standing, index) => {
+          const studentSubjectResults = calculationsByStudentSubject.get(standing.student_id) || new Map();
+          const selectedIds = selectedSubjectsByStudent.get(standing.student_id) || new Set();
+          const optionalSubjects = offerings.filter((offering) =>
+            offering.senior_secondary_group === 'optional' && selectedIds.has(offering.id));
+          const values = [String(index + 1), standing.student_name || standing.admission_number || 'Student'];
+          [...generalColumns, ...streamColumns].forEach((offering) => {
+            values.push(typeof offering === 'string'
+              ? '—'
+              : formatSubjectScore(studentSubjectResults.get(offering.id)));
+          });
+          for (let index = 0; index < optionalCount; index += 1) {
+            const optional = optionalSubjects[index];
+            values.push(optional
+              ? formatSubjectScore(studentSubjectResults.get(optional.id), optional.subjects?.name || 'Optional')
+              : '—');
+          }
+          values.push(
+            standing.grand_total ?? '—',
+            standing.average_score === null ? '—' : Number(standing.average_score).toFixed(1),
+            standing.position ?? '—',
+            standing.is_complete ? 'Complete' : 'Incomplete'
+          );
+          const row = document.createElement('tr');
+          values.forEach((value) => row.append(scoreCell(String(value))));
+          body.append(row);
+        });
+      });
+      const unassignedCount = standings.filter((standing) => !standing.division).length;
+      if (unassignedCount) {
+        const notice = document.createElement('p');
+        notice.className = 'muted-text';
+        notice.textContent = `${unassignedCount} student${unassignedCount === 1 ? '' : 's'} still need a stream and nine subject choices in the register.`;
+        masterTablesContainer.append(notice);
+      }
     }
 
-    standings.forEach((standing, index) => {
-      const row = document.createElement('tr');
-      const cells = [
-        String(index + 1),
-        standing.student_name || standing.admission_number || 'Student'
-      ];
-      const studentSubjectResults = calculationsByStudentSubject.get(standing.student_id) || new Map();
-      offerings.forEach((offering) => {
-        const calculation = studentSubjectResults.get(offering.id);
-        const componentCount = Object.keys(calculation?.component_scores || {}).length;
-        const subjectAverage = ['primary', 'nursery'].includes(stage) && componentCount
-          ? Number(calculation.subject_total) / componentCount
-          : calculation?.subject_total;
-        cells.push(calculation?.is_complete && calculation.subject_total !== null
-          ? `${['primary', 'nursery'].includes(stage) ? subjectAverage.toFixed(1) : subjectAverage}${calculation.grade ? ` (${calculation.grade})` : ''}`
-          : '—');
-      });
-      cells.push(
-        standing.grand_total ?? '—',
-        standing.average_score === null ? '—' : Number(standing.average_score).toFixed(1),
-        standing.position ?? '—',
-        standing.is_complete ? 'Complete' : 'Incomplete'
-      );
-      cells.forEach((value) => row.append(scoreCell(String(value))));
-      body.append(row);
-    });
-
-    const averages = standings.map((item) => Number(item.average_score)).filter(Number.isFinite);
-    const statistics = [
-      `Students: ${standings.length}`,
-      `Complete results: ${standings.filter((item) => item.is_complete).length}`,
-      `Class average: ${averages.length ? (averages.reduce((sum, value) => sum + value, 0) / averages.length).toFixed(1) : '—'}`
-    ];
+    const statistics = streamClass
+      ? ['science', 'arts'].flatMap((division) => {
+        const group = standings.filter((item) => item.division === division);
+        const averages = group
+          .filter((item) => item.average_score !== null && Number.isFinite(Number(item.average_score)))
+          .map((item) => Number(item.average_score));
+        const label = division.charAt(0).toLocaleUpperCase() + division.slice(1);
+        return [
+          `${label} students: ${group.length}`,
+          `${label} complete results: ${group.filter((item) => item.is_complete).length}`,
+          `${label} average: ${averages.length ? (averages.reduce((sum, value) => sum + value, 0) / averages.length).toFixed(1) : '—'}`
+        ];
+      })
+      : (() => {
+        const averages = standings
+          .filter((item) => item.average_score !== null && Number.isFinite(Number(item.average_score)))
+          .map((item) => Number(item.average_score));
+        return [
+          `Students: ${standings.length}`,
+          `Complete results: ${standings.filter((item) => item.is_complete).length}`,
+          `Class average: ${averages.length ? (averages.reduce((sum, value) => sum + value, 0) / averages.length).toFixed(1) : '—'}`
+        ];
+      })();
     statisticBar.replaceChildren();
     statistics.forEach((text) => {
       const item = document.createElement('span');
@@ -1615,8 +1852,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const classId = masterClassSelect.value;
     const sessionId = masterSessionSelect.value;
     if (!classId || !sessionId) {
-      document.querySelector('[data-master-head]').replaceChildren();
-      clearTable(document.querySelector('[data-master-body]'), 'Create or assign a class and academic session to view the master sheet.', 6);
+      masterTablesContainer.replaceChildren();
+      masterTablesContainer.textContent = 'Create or assign a class and academic session to view the master sheet.';
       document.querySelector('[data-master-statistics]').replaceChildren();
       document.querySelector('[data-master-context]').textContent = 'Select a class, session, and term.';
       document.querySelector('[data-master-heading]').textContent = 'LIVE CLASS PERFORMANCE';
@@ -1631,15 +1868,15 @@ document.addEventListener('DOMContentLoaded', () => {
       restoreWorkspaceFields((control) => control === masterTermSelect);
       const termId = masterTermSelect.value;
       if (!termId) {
-        document.querySelector('[data-master-head]').replaceChildren();
-        clearTable(document.querySelector('[data-master-body]'), 'No terms are configured for this academic session.', 6);
+        masterTablesContainer.replaceChildren();
+        masterTablesContainer.textContent = 'No terms are configured for this academic session.';
         document.querySelector('[data-master-statistics]').replaceChildren();
         setScreenNotice('[data-master-notice]', 'No terms are configured for this academic session.');
         return;
       }
       const [{ data: offerings, error: offeringError }, standingsResult] = await Promise.all([
         supabase.from('class_subject_offerings')
-          .select('id, subject_id, is_active, subjects (name)')
+          .select('id, subject_id, senior_secondary_group, is_active, subjects (name)')
           .eq('class_id', classId)
           .eq('academic_session_id', sessionId)
           .order('created_at'),
@@ -1661,10 +1898,35 @@ document.addEventListener('DOMContentLoaded', () => {
         .eq('term_id', termId);
       if (requestId !== masterRequestId) return;
       if (resultsError) throw resultsError;
-      const historicalOfferingIds = new Set((results || []).map((result) => result.class_subject_offering_id));
+      let visibleResults = results || [];
+      let selectedOfferingIds;
+      const selectedSubjectsByStudent = new Map();
+      const streamClass = isSeniorStreamClass(classId);
+      if (streamClass) {
+        const { data: selections, error: selectionsError } = await supabase
+          .from('student_subject_selections')
+          .select('student_id, class_subject_offering_id')
+          .eq('class_id', classId)
+          .eq('academic_session_id', sessionId);
+        if (selectionsError) throw selectionsError;
+        (selections || []).forEach((selection) => {
+          if (!selectedSubjectsByStudent.has(selection.student_id)) {
+            selectedSubjectsByStudent.set(selection.student_id, new Set());
+          }
+          selectedSubjectsByStudent.get(selection.student_id).add(selection.class_subject_offering_id);
+        });
+        const selectionKeys = new Set((selections || []).map((selection) =>
+          `${selection.student_id}:${selection.class_subject_offering_id}`));
+        selectedOfferingIds = new Set((selections || []).map((selection) => selection.class_subject_offering_id));
+        visibleResults = visibleResults.filter((result) =>
+          selectionKeys.has(`${result.student_id}:${result.class_subject_offering_id}`));
+      }
+      const historicalOfferingIds = new Set(visibleResults.map((result) => result.class_subject_offering_id));
       const visibleOfferings = (offerings || []).filter((offering) =>
-        offering.is_active || historicalOfferingIds.has(offering.id));
-      const calculations = await Promise.all((results || []).map(async (result) => {
+        (streamClass || !selectedOfferingIds || selectedOfferingIds.has(offering.id))
+        && (offering.is_active || historicalOfferingIds.has(offering.id)
+          || selectedOfferingIds?.has(offering.id)));
+      const calculations = await Promise.all(visibleResults.map(async (result) => {
         const { data, error } = await supabase.rpc('get_result_calculation', { p_result_id: result.id });
         if (error) throw error;
         return { result, calculation: data?.[0] || null };
@@ -1677,7 +1939,14 @@ document.addEventListener('DOMContentLoaded', () => {
         byStudent.get(result.student_id).set(result.class_subject_offering_id, calculation);
       });
       const schoolClass = currentClassesAll.find((item) => item.id === classId);
-      renderMasterSheet(standings, visibleOfferings, byStudent, schoolClass?.stage);
+      renderMasterSheet(
+        standings,
+        visibleOfferings,
+        byStudent,
+        selectedSubjectsByStudent,
+        schoolClass?.stage,
+        schoolClass?.name
+      );
       const session = currentSessions.find((item) => item.id === sessionId);
       const term = masterTermSelect.selectedOptions[0]?.textContent || '';
       document.querySelector('[data-master-context]').textContent =
@@ -1694,9 +1963,9 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (error) {
       if (requestId !== masterRequestId) return;
       showDataError('Loading the master sheet', error, (message) => setScreenNotice('[data-master-notice]', message));
-      document.querySelector('[data-master-head]').replaceChildren();
+      masterTablesContainer.replaceChildren();
       document.querySelector('[data-master-statistics]').replaceChildren();
-      clearTable(document.querySelector('[data-master-body]'), 'Could not load master-sheet data.', 6);
+      masterTablesContainer.textContent = 'Could not load master-sheet data.';
     }
   };
 
@@ -1715,7 +1984,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const termId = resultTermSelect.value;
       const { data: enrollments, error: enrollmentError } = await supabase
         .from('class_enrollments')
-        .select('student_id, students (id, first_name, other_names, last_name, admission_number)')
+        .select('student_id, division, student_subject_selections (class_subject_offering_id, class_subject_offerings (subjects (name))), students (id, first_name, other_names, last_name, admission_number)')
         .eq('class_id', classId)
         .eq('academic_session_id', sessionId)
         .order('enrolled_on');
@@ -1734,13 +2003,26 @@ document.addEventListener('DOMContentLoaded', () => {
         resetResultView('No result is available for the selected class, session, and term.');
         return;
       }
-      const { data: results, error: resultsError } = await supabase
-        .from('student_subject_results')
-        .select('id, student_id, class_subject_offering_id, status, class_subject_offerings (subjects (name))')
-        .eq('class_id', classId)
-        .eq('academic_session_id', sessionId)
-        .eq('term_id', termId)
-        .eq('student_id', resultStudentSelect.value);
+      let selectedSubjects = [];
+      if (isSeniorStreamClass(classId)) {
+        selectedSubjects = enrollments
+          ?.find((item) => item.student_id === resultStudentSelect.value)
+          ?.student_subject_selections || [];
+      }
+      const selectedOfferingIds = selectedSubjects.map((item) => item.class_subject_offering_id);
+      let resultsQuery = supabase
+          .from('student_subject_results')
+          .select('id, student_id, class_subject_offering_id, status, class_subject_offerings (subjects (name))')
+          .eq('class_id', classId)
+          .eq('academic_session_id', sessionId)
+          .eq('term_id', termId)
+          .eq('student_id', resultStudentSelect.value);
+      if (isSeniorStreamClass(classId) && selectedOfferingIds.length) {
+        resultsQuery = resultsQuery.in('class_subject_offering_id', selectedOfferingIds);
+      }
+      const { data: results, error: resultsError } = isSeniorStreamClass(classId) && !selectedOfferingIds.length
+        ? { data: [], error: null }
+        : await resultsQuery;
       if (requestId !== resultRequestId) return;
       if (resultsError) throw resultsError;
       const calculations = await Promise.all((results || []).map(async (result) => {
@@ -1749,7 +2031,15 @@ document.addEventListener('DOMContentLoaded', () => {
         return { result, calculation: data?.[0] || null };
       }));
       if (requestId !== resultRequestId) return;
-      renderResultView(calculations, enrollments || [], resultStudentSelect.value, classId, sessionId, termId);
+      renderResultView(
+        calculations,
+        enrollments || [],
+        resultStudentSelect.value,
+        classId,
+        sessionId,
+        termId,
+        selectedSubjects
+      );
     } catch (error) {
       if (requestId !== resultRequestId) return;
       showDataError('Loading the student result', error, (message) => setScreenNotice('[data-result-notice]', message));
@@ -1772,7 +2062,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setScreenNotice('[data-result-notice]', message);
   };
 
-  const renderResultView = async (calculations, enrollments, studentId, classId, sessionId, termId) => {
+  const renderResultView = async (calculations, enrollments, studentId, classId, sessionId, termId, selectedSubjects = []) => {
     const enrollment = enrollments.find((item) => item.student_id === studentId);
     const student = enrollment?.students;
     if (!student) {
@@ -1781,17 +2071,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     const results = calculations.filter(({ calculation }) => calculation);
     const fullName = [student.first_name, student.other_names, student.last_name].filter(Boolean).join(' ');
+    const streamClass = isSeniorStreamClass(classId);
+    const streamDivision = streamClass ? enrollment.division : '';
     document.querySelector('[data-result-name]').textContent = fullName;
     document.querySelector('[data-result-admission]').textContent =
-      `${student.admission_number} · ${currentClassesAll.find((item) => item.id === classId)?.name || ''}`;
+      `${student.admission_number} · ${currentClassesAll.find((item) => item.id === classId)?.name || ''}${streamDivision ? ` · ${streamDivision.charAt(0).toLocaleUpperCase()}${streamDivision.slice(1)} division` : ''}`;
     document.querySelector('[data-result-avatar]').textContent =
       fullName.split(/\s+/).slice(0, 2).map((part) => part.charAt(0)).join('').toLocaleUpperCase();
     document.querySelector('[data-result-context]').textContent =
       `${resultTermSelect.selectedOptions[0]?.textContent || ''} · ${currentSessions.find((item) => item.id === sessionId)?.name || ''}`;
     const status = document.querySelector('[data-result-status]');
-    const allApproved = results.length > 0 && results.every(({ result }) => result.status === 'approved' || result.status === 'locked');
+    const allSubjectsHaveResults = !streamClass || results.length === selectedSubjects.length;
+    const allApproved = results.length > 0 && allSubjectsHaveResults
+      && results.every(({ result }) => result.status === 'approved' || result.status === 'locked');
     status.textContent = results.length
-      ? [...new Set(results.map(({ result }) => result.status.replaceAll('_', ' ')))].join(', ')
+      ? streamClass && !allSubjectsHaveResults
+        ? 'Results in progress'
+        : [...new Set(results.map(({ result }) => result.status.replaceAll('_', ' ')))].join(', ')
       : 'No results recorded';
     status.className = `badge ${allApproved ? 'success' : results.length ? 'warning' : 'muted'}`;
     document.querySelector('[data-result-head]').replaceChildren();
@@ -1804,31 +2100,52 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelector('[data-result-head]').append(header);
     const body = document.querySelector('[data-result-body]');
     body.replaceChildren();
-    results.forEach(({ result, calculation }) => {
+    const calculationByOffering = new Map(calculations.map(({ result, calculation }) =>
+      [result.class_subject_offering_id, { result, calculation }]));
+    const displayResults = streamClass && selectedSubjects.length
+      ? [...selectedSubjects]
+        .sort((left, right) => (left.class_subject_offerings?.subjects?.name || '')
+          .localeCompare(right.class_subject_offerings?.subjects?.name || ''))
+        .map((selection) => calculationByOffering.get(selection.class_subject_offering_id) || ({
+          result: {
+            class_subject_offerings: selection.class_subject_offerings,
+            status: 'not_started'
+          },
+          calculation: null
+        }))
+      : results;
+    displayResults.forEach(({ result, calculation }) => {
       const row = document.createElement('tr');
       const subject = result.class_subject_offerings?.subjects?.name || 'Subject';
-      const componentScores = Object.entries(calculation.component_scores || {})
+      const componentScores = Object.entries(calculation?.component_scores || {})
         .map(([code, value]) => `${code}: ${value}`)
-        .join(' · ') || 'No component scores';
+        .join(' · ') || (calculation ? 'No component scores' : 'Not entered');
       const classStage = currentClassesAll.find((item) => item.id === classId)?.stage;
-      const componentCount = Object.keys(calculation.component_scores || {}).length;
+      const componentCount = Object.keys(calculation?.component_scores || {}).length;
       const subjectAverage = ['primary', 'nursery'].includes(classStage) && componentCount
         ? (Number(calculation.subject_total) / componentCount).toFixed(1)
-        : calculation.subject_total;
-      [
-        subject,
-        componentScores,
-        calculation.is_complete
-          ? ['primary', 'nursery'].includes(classStage)
-            ? `${calculation.subject_total} / ${subjectAverage}`
-            : calculation.subject_total
-          : 'Incomplete',
-        calculation.grade || '—',
-        result.status.replaceAll('_', ' ')
-      ].forEach((value) => row.append(scoreCell(String(value))));
+        : calculation?.subject_total;
+      const values = calculation
+        ? [
+          subject,
+          componentScores,
+          calculation.is_complete
+            ? ['primary', 'nursery'].includes(classStage)
+              ? `${calculation.subject_total} / ${subjectAverage}`
+              : calculation.subject_total
+            : 'Incomplete',
+          calculation.grade || '—',
+          result.status.replaceAll('_', ' ')
+        ]
+        : [subject, 'Not entered', '—', '—', result.status.replaceAll('_', ' ')];
+      values.forEach((value) => row.append(scoreCell(String(value))));
       body.append(row);
     });
-    if (!results.length) clearTable(body, 'No result records exist for this student in the selected term.', 5);
+    if (!displayResults.length) {
+      clearTable(body, streamClass
+        ? 'Assign this student a division and nine subjects in the register first.'
+        : 'No result records exist for this student in the selected term.', 5);
+    }
     try {
       const { data: standings, error } = await supabase.rpc('get_class_standings', {
         p_class_id: classId,
@@ -1846,10 +2163,14 @@ document.addEventListener('DOMContentLoaded', () => {
       document.querySelector('[data-result-position]').textContent = standing?.position
         ? String(standing.position)
         : '—';
-      setScreenNotice('[data-result-notice]', results.length
+      setScreenNotice('[data-result-notice]', streamClass && !selectedSubjects.length
+        ? 'Assign this student a division and nine subjects in the register before processing their result.'
+        : results.length
         ? standing?.is_complete
           ? ''
-          : 'The class total, average, and position appear after all required class results are complete.'
+          : streamClass
+            ? 'The division total, average, and position appear after all 9 selected subjects are complete.'
+            : 'The class total, average, and position appear after all required class results are complete.'
         : 'No result records exist for this student in the selected term yet.');
     } catch (error) {
       console.error('Could not load the class position for this result.', error);
@@ -2151,7 +2472,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (/^[\s]*[=+\-@]/.test(value)) value = `'${value}`;
         return `"${value.replaceAll('"', '""')}"`;
       }).join(','));
-    if (rows.length < 2 || document.querySelector('[data-master-body] .muted-text')) {
+    if (rows.length < 2 || masterTablesContainer.querySelector('.master-table .muted-text')) {
       showToast('There is no master-sheet data to export.');
       return;
     }
@@ -3158,6 +3479,13 @@ document.addEventListener('DOMContentLoaded', () => {
     void loadStudentRows();
   });
   studentSessionSelect.addEventListener('change', () => void loadStudentRows());
+  studentDivisionSelect.addEventListener('change', () => {
+    const retainedSelections = [...studentSubjectOptions.querySelectorAll('input:checked')]
+      .filter((input) => input.dataset.elective !== undefined)
+      .map((input) => input.value);
+    renderStudentSubjectChoices(studentDivisionSelect.value, retainedSelections);
+  });
+  studentSubjectOptions.addEventListener('change', updateStudentSubjectCount);
   document.addEventListener('click', (event) => {
     const registerButton = event.target.closest('[data-class-register]');
     if (!registerButton) return;
@@ -3210,10 +3538,19 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
     studentFormMessage.textContent = '';
+    studentForm.reset();
+    studentSubjectOptions.replaceChildren();
+    studentSubjectChoice.hidden = true;
     editingStudentId = '';
     document.querySelector('#student-dialog-title').textContent = 'Register student';
     studentForm.querySelector('.muted-text').textContent = 'Student and class enrollment will be saved together.';
     studentForm.querySelector('[type="submit"]').textContent = 'Save student';
+    try {
+      await loadStudentSubjectChoices();
+    } catch (error) {
+      showDataError('Loading SSS stream subjects', error, (message) => { studentFormMessage.textContent = message; });
+      return;
+    }
     studentDialog.showModal();
     studentForm.querySelector('[name="first_name"]').focus();
   });
@@ -3264,10 +3601,17 @@ document.addEventListener('DOMContentLoaded', () => {
     studentForm.querySelector('[name="admission_number"]').value = student.admission_number || '';
     studentForm.querySelector('[name="gender"]').value = student.gender || '';
     studentForm.querySelector('[name="date_of_birth"]').value = student.date_of_birth || '';
+    studentDivisionSelect.value = enrollment.division || '';
     document.querySelector('#student-dialog-title').textContent = 'Edit student';
     studentForm.querySelector('.muted-text').textContent = 'Correct this student’s register details.';
     studentForm.querySelector('[type="submit"]').textContent = 'Save changes';
     studentFormMessage.textContent = '';
+    try {
+      await loadStudentSubjectChoices(student.id);
+    } catch (error) {
+      showDataError('Loading the student’s SSS stream subjects', error, (message) => { studentFormMessage.textContent = message; });
+      return;
+    }
     studentDialog.showModal();
   });
   document.querySelectorAll('[data-close-student-dialog]').forEach((button) => {
@@ -3400,19 +3744,38 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!supabase || !studentClassSelect.value || !studentSessionSelect.value) return;
     const formData = new FormData(studentForm);
     const submitButton = studentForm.querySelector('[type="submit"]');
+    const streamClass = isSeniorStreamClass(studentClassSelect.value);
+    const offeringIds = streamClass ? selectedStudentSubjectIds() : [];
+    if (streamClass && (!studentDivisionSelect.value
+      || studentSubjectChoice.dataset.coreCount !== '5'
+      || studentSubjectChoice.dataset.streamCount !== (studentDivisionSelect.value === 'arts' ? '3' : '2')
+      || studentSubjectChoice.dataset.optionalCount !== (studentDivisionSelect.value === 'arts' ? '1' : '2')
+      || offeringIds.length !== 9)) {
+      studentFormMessage.textContent =
+        'Choose a division, include all required subjects, and select the correct optional subjects for 9 total.';
+      return;
+    }
     submitButton.disabled = true;
     submitButton.textContent = 'Saving…';
     studentFormMessage.textContent = '';
     try {
       if (editingStudentId) {
-        const { error } = await supabase.rpc('update_registered_student', {
+        const { error } = await supabase.rpc(streamClass
+          ? 'update_registered_student_with_stream'
+          : 'update_registered_student', {
           p_student_id: editingStudentId,
           p_admission_number: String(formData.get('admission_number')).trim(),
           p_first_name: String(formData.get('first_name')).trim(),
           p_last_name: String(formData.get('last_name')).trim(),
           p_other_names: String(formData.get('other_names')).trim() || null,
           p_gender: String(formData.get('gender')) || null,
-          p_date_of_birth: String(formData.get('date_of_birth')) || null
+          p_date_of_birth: String(formData.get('date_of_birth')) || null,
+          ...(streamClass ? {
+            p_class_id: studentClassSelect.value,
+            p_academic_session_id: studentSessionSelect.value,
+            p_division: studentDivisionSelect.value,
+            p_offering_ids: offeringIds
+          } : {})
         });
         if (error) throw error;
         studentDialog.close();
@@ -3422,7 +3785,9 @@ document.addEventListener('DOMContentLoaded', () => {
         await loadStudentRows();
         return;
       }
-      const { error } = await supabase.rpc('register_student', {
+      const { error } = await supabase.rpc(streamClass
+        ? 'register_student_with_stream'
+        : 'register_student', {
         p_admission_number: String(formData.get('admission_number')).trim(),
         p_first_name: String(formData.get('first_name')).trim(),
         p_last_name: String(formData.get('last_name')).trim(),
@@ -3430,7 +3795,11 @@ document.addEventListener('DOMContentLoaded', () => {
         p_academic_session_id: studentSessionSelect.value,
         p_other_names: String(formData.get('other_names')).trim() || null,
         p_gender: String(formData.get('gender')) || null,
-        p_date_of_birth: String(formData.get('date_of_birth')) || null
+        p_date_of_birth: String(formData.get('date_of_birth')) || null,
+        ...(streamClass ? {
+          p_division: studentDivisionSelect.value,
+          p_offering_ids: offeringIds
+        } : {})
       });
       if (error) {
         console.error('Student registration failed.', error);

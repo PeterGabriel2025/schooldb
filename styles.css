@@ -926,6 +926,12 @@ input, select {
   overflow: auto;
 }
 
+.master-division-title {
+  margin: 18px 0 8px;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
 .master-table {
   min-width: 1050px;
 }
@@ -1168,6 +1174,61 @@ input, select {
   grid-template-columns: repeat(4, minmax(140px, 1fr));
   gap: 14px;
   margin-bottom: 18px;
+}
+
+.student-stream-setup {
+  display: grid;
+  gap: 14px;
+  margin: 18px 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-muted);
+}
+
+.student-stream-setup > label {
+  display: grid;
+  gap: 7px;
+  max-width: 320px;
+  color: var(--text);
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.student-subject-choice {
+  display: grid;
+  gap: 8px;
+}
+
+.student-subject-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 6px;
+  max-height: 230px;
+  overflow: auto;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.student-subject-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 7px;
+  border-radius: 7px;
+  color: var(--text);
+  font-size: 0.82rem;
+}
+
+.student-subject-option:hover {
+  background: var(--surface-muted);
+}
+
+.student-subject-option input {
+  flex: 0 0 auto;
+  margin-top: 3px;
 }
 
 .filter-grid label,

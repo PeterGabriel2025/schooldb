@@ -7,8 +7,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <script type="module" crossorigin src="/assets/index-CZ58anKM.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-BkwshBrL.css">
+    <script type="module" crossorigin src="/assets/index-IWtvbtBO.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-CnGUc-7r.css">
   </head>
   <body class="auth-required">
     <div class="splash-screen" data-splash-screen role="status" aria-label="Loading Turning Point Results">
@@ -261,7 +261,7 @@
                 <button class="ghost-btn" type="button" data-export-students>Export list</button>
               </div>
             </div>
-            <div class="table-wrap"><table class="data-table" id="students-table"><thead><tr><th>S/N</th><th>Student</th><th>Admission number</th><th>Gender</th><th>Enrolment</th><th>Status</th><th>Actions</th></tr></thead><tbody></tbody></table></div>
+            <div class="table-wrap"><table class="data-table" id="students-table"><thead><tr><th>S/N</th><th>Student</th><th>Admission number</th><th>Gender</th><th>Division / subjects</th><th>Enrolment</th><th>Status</th><th>Actions</th></tr></thead><tbody></tbody></table></div>
             <div class="table-footer"><span data-student-count>Loading students…</span></div>
           </div>
         </section>
@@ -280,6 +280,20 @@
               <label>Gender<select name="gender"><option value="">Not specified</option><option value="female">Female</option><option value="male">Male</option><option value="other">Other</option><option value="undisclosed">Prefer not to say</option></select></label>
               <label>Date of birth<input name="date_of_birth" type="date"></label>
             </div>
+            <section class="student-stream-setup" data-student-stream-setup hidden>
+              <label>SSS 2/3 division
+                <select name="division" data-student-division>
+                  <option value="">Choose Science or Arts</option>
+                  <option value="science">Science</option>
+                  <option value="arts">Arts</option>
+                </select>
+              </label>
+              <div class="student-subject-choice" data-student-subject-choice hidden>
+                <strong data-student-subject-instructions>Required subjects are included automatically.</strong>
+                <p class="muted-text" data-student-subject-count></p>
+                <div class="student-subject-options" data-student-subject-options></div>
+              </div>
+            </section>
             <p class="form-message" data-student-form-message role="status" aria-live="polite"></p>
             <div class="header-actions"><button class="ghost-btn" type="button" data-close-student-dialog>Cancel</button><button class="btn-primary" type="submit">Save student</button></div>
           </form>
@@ -323,9 +337,7 @@
           <div class="panel">
             <div class="filter-grid compact-filters"><label>Class<select id="master-class-select"></select></label><label>Session<select id="master-session-select"></select></label><label>Term<select id="master-term-select"></select></label></div>
             <div class="master-school-heading"><div class="school-mark">🎓</div><div><strong>EDURESULTS</strong><span data-master-heading>LIVE CLASS PERFORMANCE</span></div><span class="badge info" data-master-status>Live data</span></div>
-            <div class="table-wrap master-table-wrap">
-              <table class="master-table"><thead data-master-head></thead><tbody data-master-body></tbody></table>
-            </div>
+            <div data-master-tables></div>
             <div class="class-statistics" data-master-statistics></div>
           </div>
         </section>

@@ -50,6 +50,24 @@ Subject-teacher assignments grant score entry and editing only for the selected
 subject/class offerings. Having both roles does not grant class-wide score
 editing.
 
+## SSS 2/3 Arts and Science streams
+
+The `202611230001_sss_stream_subject_selection.sql` migration adds student-level
+stream and subject choices for SSS 2 and SSS 3 only. Both streams take Maths,
+English, Economics, Civic Education, and Biology. Arts students also take
+Government, Literature, CRS, and one optional subject; Science students take
+Chemistry, Physics, and two optional subjects. Optional choices are Igbo,
+Marketing, Data Processing, Agricultural Science, and Geography.
+
+An administrator or authorized register manager assigns each student's stream
+and optional choices in the student register. Teachers continue entering
+results through the existing score-entry workflow; students are not asked to
+upload results. Score entry, individual results, master sheets, averages, and
+positions use only the selected nine subjects. Master sheets are separated by
+stream, and positions are ranked within the same stream and class. After
+applying the migration, assign existing SSS 2/3 students their stream and
+subjects in the register before their results can be completed and ranked.
+
 The remaining report cards (missing scores, class summaries, submission
 monitoring, and audit activity) and result review/approval controls are not
 connected to live data. Permission administration is persisted and enforced
