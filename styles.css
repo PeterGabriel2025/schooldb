@@ -2058,6 +2058,10 @@ input, select {
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
+.result-print-sheet {
+  display: none;
+}
+
 .toast-message.visible {
   opacity: 1;
   transform: translateY(0);
@@ -2074,55 +2078,478 @@ input, select {
 }
 
 @media print {
+  @page {
+    size: portrait;
+    margin: 8mm;
+  }
+
+  @page master-sheet {
+    size: landscape;
+    margin: 10mm;
+  }
+
+  @page result-sheet {
+    size: A4 portrait;
+    margin: 0;
+  }
+
   body * {
-    visibility: hidden;
+    visibility: hidden !important;
   }
 
-  [data-view="master"].active,
-  [data-view="master"].active * {
-    visibility: visible;
+  body[data-print-mode="master"] [data-view="master"].active,
+  body[data-print-mode="master"] [data-view="master"].active * {
+    visibility: visible !important;
   }
 
-  [data-view="results"].active,
-  [data-view="results"].active * {
-    visibility: visible;
+  body[data-print-mode="result"] [data-view="results"].active,
+  body[data-print-mode="result"] [data-view="results"].active * {
+    visibility: visible !important;
   }
 
   .sidebar,
-  .topbar,
-  .page-heading button {
+  .topbar {
     display: none !important;
   }
 
-  .main-panel {
-    padding: 0;
+  body[data-print-mode="master"] .main-panel {
+    padding: 0 !important;
   }
 
-  .page-view.active {
+  body[data-print-mode="master"] .page-view.active {
     position: absolute;
     inset: 0;
-    display: block;
+    display: block !important;
+    page: master-sheet;
   }
 
-  .panel {
+  body[data-print-mode="master"] .panel {
     box-shadow: none;
     border: 0;
   }
 
-  .master-table {
+  body[data-print-mode="master"] .master-table {
     min-width: 0;
     font-size: 8px;
   }
 
-  .master-table th,
-  .master-table td {
+  body[data-print-mode="master"] .master-table th,
+  body[data-print-mode="master"] .master-table td {
     padding: 3px;
   }
 
-  @page {
-    size: landscape;
-    margin: 10mm;
+  body[data-print-mode="result"] .app-shell {
+    display: block !important;
   }
+
+  body[data-print-mode="result"] .main-panel {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  body[data-print-mode="result"] .page-view[data-view="results"].active {
+    position: static !important;
+    inset: auto !important;
+    display: block !important;
+  }
+
+  body[data-print-mode="result"] .page-view[data-view="results"].active > :not(.result-print-sheet) {
+    display: none !important;
+  }
+
+  body[data-print-mode="result"] .result-print-sheet,
+  body[data-print-mode="result"] .result-print-sheet * {
+    visibility: visible !important;
+  }
+
+  body[data-print-mode="result"] .result-print-sheet {
+    display: block !important;
+    box-sizing: border-box;
+    position: relative;
+    width: 210mm;
+    height: 297mm;
+    margin: 0;
+    padding: 5mm 5mm 5mm;
+    overflow: hidden;
+    color: #111;
+    background: #fff;
+    font-family: Tahoma, Arial, sans-serif;
+    font-size: 9.5pt;
+    line-height: 1.2;
+    border: 0;
+    outline: 0;
+    page: result-sheet;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .result-print-sheet::before {
+    position: absolute;
+    inset: .7mm;
+    border: 1.1mm solid #111;
+    content: "";
+    pointer-events: none;
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 5mm), calc(100% - 5mm) 100%, 5mm 100%, 0 calc(100% - 5mm));
+    z-index: 2;
+  }
+
+  .result-print-header {
+    display: grid;
+    grid-template-columns: 35mm minmax(0, 1fr);
+    align-items: center;
+    justify-content: space-between;
+    min-height: 35mm;
+    position: relative;
+  }
+
+  .result-print-logo {
+    width: 34mm;
+    height: 34mm;
+    display: grid;
+    place-items: center;
+  }
+
+  .result-print-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: grayscale(1) contrast(1.25);
+  }
+
+  .result-print-school-heading {
+    text-align: center;
+    padding-left: 2mm;
+  }
+
+  .result-print-school-heading h1 {
+    margin: 0 0 1px;
+    font-family: Tahoma, Arial, sans-serif;
+    font-size: 26pt;
+    font-weight: 900;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .result-print-school-heading h3 {
+    margin: 1px 0;
+    font-family: Tahoma, Arial, sans-serif;
+    font-size: 12pt;
+    font-style: italic;
+  }
+
+  .result-print-school-heading h4 {
+    margin: 1px 0;
+    font-size: 13pt;
+    font-weight: 900;
+  }
+
+  .result-print-school-heading h2 {
+    margin: 0;
+    font-size: 18pt;
+    font-weight: 900;
+  }
+
+  .result-print-school-heading p {
+    margin: 1px 0;
+    font-size: 7.5pt;
+    font-weight: 700;
+  }
+
+  .result-print-details {
+    margin-top: 3mm;
+    font-size: 9.5pt;
+    font-weight: 800;
+  }
+
+  .result-print-detail-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 3mm;
+    min-height: 5.2mm;
+    margin-bottom: .35mm;
+  }
+
+  .result-print-field {
+    display: flex;
+    min-width: 0;
+    align-items: end;
+    gap: 1mm;
+    white-space: nowrap;
+  }
+
+  .result-print-field-full {
+    grid-column: 1 / -1;
+  }
+
+  .result-print-field label {
+    flex-shrink: 0;
+    font-size: 9pt;
+    font-weight: 900;
+  }
+
+  .result-print-field > span {
+    flex: 1;
+    min-width: 4mm;
+    height: 4.2mm;
+    padding-left: 1mm;
+    border-bottom: .5mm solid #111;
+    font-family: Tahoma, Arial, sans-serif;
+    font-size: 10.5pt;
+    font-weight: 700;
+  }
+
+  .result-print-field .result-print-blank {
+    min-width: 10mm;
+  }
+
+  .result-print-report {
+    display: grid;
+    grid-template-columns: 62% 38%;
+    margin-top: 4mm;
+    border: .55mm solid #111;
+  }
+
+  .result-print-academic,
+  .result-print-domain {
+    min-width: 0;
+  }
+
+  .result-print-academic {
+    display: flex;
+    flex-direction: column;
+    border-right: .55mm solid #111;
+  }
+
+  .result-print-section-heading {
+    display: flex;
+    min-height: 11mm;
+    align-items: end;
+    justify-content: center;
+    padding: 1mm;
+    border-bottom: .5mm solid #111;
+    text-align: center;
+    font-size: 9.5pt;
+    font-weight: 900;
+  }
+
+  .result-print-domain > .result-print-section-heading {
+    align-items: center;
+  }
+
+  .result-print-academic-table,
+  .result-print-domain-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+
+  .result-print-academic-table th,
+  .result-print-academic-table td,
+  .result-print-domain-table th,
+  .result-print-domain-table td {
+    border: .6mm solid #111;
+    text-align: center;
+  }
+
+  .result-print-academic-table th,
+  .result-print-academic-table td {
+    height: 4.35mm;
+    padding: .1mm;
+    font-size: 9pt;
+    font-weight: 900;
+    line-height: 1;
+  }
+
+  .result-print-academic-table th {
+    color: #111;
+    font-weight: 900;
+  }
+
+  .result-print-academic-table .result-print-subject-heading,
+  .result-print-academic-table .result-print-subject {
+    width: 37%;
+    text-align: left;
+    padding-left: 1mm;
+  }
+
+  .result-print-academic-table .result-print-subject-heading {
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  .result-print-academic-table .result-print-vertical {
+    height: 29mm;
+    padding: .5mm .3mm;
+    vertical-align: middle;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    white-space: normal;
+    overflow-wrap: anywhere;
+    font-family: Tahoma, Arial, sans-serif;
+    font-size: 9pt;
+    font-weight: 900;
+    line-height: 1.05;
+  }
+
+  .result-print-academic-table .result-print-subject {
+    font-family: Tahoma, Arial, sans-serif;
+    font-size: 9.2pt;
+    font-weight: 900;
+  }
+
+  .result-print-academic-table .result-print-total-row td {
+    height: 5mm;
+    font-weight: 700;
+  }
+
+  .result-print-academic-table tbody td:not(.result-print-subject),
+  .result-print-academic-table tfoot td {
+    font-family: Tahoma, Arial, sans-serif;
+    font-size: 9pt;
+    font-weight: 900;
+  }
+
+  .result-print-academic-bottom {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    margin-top: auto;
+  }
+
+  .result-print-decision {
+    display: grid;
+    min-height: 8mm;
+    grid-template-columns: auto auto auto;
+    align-items: center;
+    justify-content: end;
+    gap: 3mm;
+    padding: 1mm;
+    border-top: .5mm solid #111;
+    font-size: 8.7pt;
+    font-weight: 900;
+  }
+
+  .result-print-comments {
+    font-size: 8.5pt;
+    font-weight: 900;
+    border-top: .5mm solid #111;
+  }
+
+  .result-print-comments > div {
+    height: 5.5mm;
+    padding: .7mm;
+    border-bottom: .5mm solid #111;
+  }
+
+  .result-print-comments-area {
+    display: grid;
+    grid-template-columns: 62% 38%;
+    border-bottom: .5mm solid #111;
+  }
+
+  .result-print-domain-table th,
+  .result-print-domain-table td {
+    height: 4.35mm;
+    padding: .1mm .3mm;
+    font-size: 8.3pt;
+    font-weight: 900;
+    line-height: 1;
+  }
+
+  .result-print-domain-table .result-print-behaviour {
+    width: 70%;
+    text-align: left;
+    padding-left: 1mm;
+    font-weight: 900;
+  }
+
+  .result-print-domain-table th:not(.result-print-behaviour),
+  .result-print-domain-table td:not(.result-print-behaviour) {
+    width: 6%;
+    text-align: center;
+  }
+
+  .result-print-domain-table .result-print-domain-title {
+    text-align: center;
+    font-size: 8.4pt;
+    font-weight: 900;
+  }
+
+  .result-print-rating-key {
+    padding: 1mm;
+    border-top: 1px solid #222;
+    font-size: 8pt;
+    font-weight: 700;
+  }
+
+  .result-print-rating-key h4 {
+    margin: .5mm 0 1mm;
+    text-align: center;
+    font-size: 8pt;
+    text-decoration: underline;
+  }
+
+  .result-print-rating-key > strong {
+    display: block;
+    margin-bottom: .5mm;
+  }
+
+  .result-print-rating-key > div {
+    display: grid;
+    grid-template-columns: 5mm 1fr 16mm;
+    gap: .5mm;
+    margin-bottom: .2mm;
+  }
+
+  .result-print-bottom {
+    display: grid;
+    min-height: 19mm;
+    grid-template-columns: 63% 37%;
+    margin-top: 2mm;
+    border: .5mm solid #111;
+  }
+
+  .result-print-grade-interpretation {
+    padding: 1mm;
+    border-right: .5mm solid #111;
+    font-size: 8.5pt;
+    font-weight: 800;
+  }
+
+  .result-print-grade-interpretation h4 {
+    margin: .5mm 0 1.5mm;
+    text-align: center;
+    font-size: 8.5pt;
+    font-weight: 900;
+    text-decoration: underline;
+  }
+
+  .result-print-grade-interpretation > div {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1mm;
+    margin-bottom: .5mm;
+  }
+
+  .result-print-principal-signature {
+    display: flex;
+    flex-direction: column;
+    justify-content: end;
+    padding: 1mm;
+    text-align: center;
+    font-size: 8.5pt;
+    font-weight: 900;
+  }
+
+  .result-print-principal-signature span {
+    height: 10mm;
+    margin-bottom: 1mm;
+    border-bottom: .5mm solid #111;
+  }
+
 }
 
 @media (max-width: 1050px) {
@@ -3960,7 +4387,7 @@ thead th {
   .nav {
     position: absolute;
     top: calc(100% + 8px);
-    right: 14px;
+    right: 38px;
     left: auto;
     display: flex;
     width: min(360px, calc(100vw - 28px));
@@ -5526,5 +5953,90 @@ thead th {
   :root[data-theme="dark"] .mobile-bottom-nav {
     border-color: rgba(255,255,255,.1);
     background: rgba(19, 26, 53, .93);
+  }
+}
+
+@media (max-width: 360px) {
+  .sidebar {
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+
+  .brand-panel {
+    gap: 7px;
+  }
+
+  .brand-icon {
+    flex-basis: 34px;
+    width: 34px;
+    height: 34px;
+  }
+
+  .brand-panel h1 {
+    font-size: .88rem;
+    white-space: nowrap;
+  }
+
+  .brand-panel p {
+    font-size: .6rem;
+  }
+
+  .brand-panel .theme-toggle {
+    flex-basis: 36px;
+    width: 36px;
+    height: 36px;
+  }
+
+  .menu-toggle {
+    flex-basis: 38px;
+    width: 38px;
+    height: 38px;
+  }
+
+  .main-panel {
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+
+  .topbar:has(+ .dashboard-view.active) .page-title-wrap h2 {
+    font-size: clamp(1.12rem, 5vw, 1.35rem);
+    letter-spacing: -.04em;
+    overflow-wrap: normal;
+    white-space: nowrap;
+  }
+
+  .dashboard-class-cards .class-card {
+    grid-template-columns: 31px minmax(0, 1fr);
+    column-gap: 5px;
+    padding-right: 6px;
+    padding-left: 6px;
+  }
+
+  .dashboard-class-cards .class-icon {
+    width: 30px;
+    height: 30px;
+  }
+
+  .dashboard-class-cards .class-card h3 {
+    font-size: .62rem;
+    overflow-wrap: normal;
+  }
+
+  .dashboard-class-cards .class-card p {
+    font-size: .52rem;
+  }
+
+  .dashboard-action-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-action-list button {
+    min-height: 70px;
+    font-size: .65rem;
+  }
+
+  .mobile-bottom-nav {
+    right: 8px;
+    left: 8px;
   }
 }

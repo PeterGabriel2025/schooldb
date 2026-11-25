@@ -331,7 +331,7 @@
         </dialog>
 
         <section class="page-view" data-view="master" hidden>
-          <div class="page-heading"><div><h2>Term Master Sheet</h2><p data-master-context>Select a class, session, and term.</p></div><div class="toolbar-controls"><button class="ghost-btn" data-print>Print master sheet</button><button class="btn-primary compact" type="button" data-export-master>Export CSV</button></div></div>
+          <div class="page-heading"><div><h2>Term Master Sheet</h2><p data-master-context>Select a class, session, and term.</p></div><div class="toolbar-controls"><button class="ghost-btn" data-print="master">Print master sheet</button><button class="btn-primary compact" type="button" data-export-master>Export CSV</button></div></div>
           <div class="demo-notice" data-master-notice hidden></div>
           <div class="panel">
             <div class="filter-grid compact-filters"><label>Class<select id="master-class-select"></select></label><label>Session<select id="master-session-select"></select></label><label>Term<select id="master-term-select"></select></label></div>
@@ -342,12 +342,120 @@
         </section>
 
         <section class="page-view" data-view="results" hidden>
-          <div class="page-heading"><div><h2>Student Result</h2><p>View a student's term performance and subject breakdown.</p></div><button class="ghost-btn" data-print>Print result</button></div>
+          <div class="page-heading"><div><h2>Student Result</h2><p>View a student's term performance and subject breakdown.</p></div><button class="ghost-btn" data-print="result">Print result</button></div>
           <div class="demo-notice" data-result-notice hidden></div>
           <div class="filter-grid compact-filters"><label>Class<select id="result-class-select"></select></label><label>Session<select id="result-session-select"></select></label><label>Term<select id="result-term-select"></select></label><label>Student<select id="result-student-select"></select></label></div>
           <div class="panel result-profile"><div class="profile-avatar" data-result-avatar>?</div><div class="profile-info"><h3 data-result-name>Select a student</h3><p data-result-admission>Select a class and student to view a result.</p><span class="badge muted" data-result-status>No result selected</span></div></div>
           <div class="overview-grid three result-metrics"><article class="metric-card"><div><label>Grand total</label><strong data-result-total>—</strong></div></article><article class="metric-card"><div><label>Average score</label><strong data-result-average>—</strong></div></article><article class="metric-card"><div><label>Class position</label><strong data-result-position>—</strong></div></article></div>
           <div class="panel"><div class="panel-header"><h3>Subject performance</h3><span class="muted-text" data-result-context></span></div><div class="table-wrap"><table class="data-table"><thead data-result-head></thead><tbody data-result-body></tbody></table></div></div>
+          <article class="result-print-sheet" data-result-print-sheet>
+            <header class="result-print-header">
+              <div class="result-print-logo"><img src="./assets/school-crest-mobile.png" alt="" /></div>
+              <div class="result-print-school-heading">
+                <h1>TURNING POINT INT'L SCHOOL</h1>
+                <h3>UMUODE VILLAGE OSISIOMA NGWA L.G.A.</h3>
+                <h4 data-print-result-school-level>ASSESSMENT RECORD</h4>
+                <h2>CUMULATIVE REPORT</h2>
+              </div>
+            </header>
+            <section class="result-print-details" aria-label="Student information">
+              <div class="result-print-detail-row">
+                <div class="result-print-field result-print-field-full"><label>NAME OF STUDENT:</label><span data-print-result-name></span></div>
+              </div>
+              <div class="result-print-detail-row">
+                <div class="result-print-field"><label>CLASS:</label><span data-print-result-class></span><label>NO. IN CLASS:</label><span data-print-result-class-size></span></div>
+                <div class="result-print-field"><label>SEX:</label><span data-print-result-sex></span><label>POSITION:</label><span data-print-result-position></span></div>
+              </div>
+              <div class="result-print-detail-row">
+                <div class="result-print-field"><label>TERM:</label><span data-print-result-term></span><label>NEXT TERM BEGINS:</label><span class="result-print-blank"></span></div>
+                <div class="result-print-field"><label>STUDENT'S NO:</label><span data-print-result-admission></span></div>
+              </div>
+              <div class="result-print-detail-row">
+                <div class="result-print-field"><label>NO. OF TIMES SCHOOL OPENED:</label><span class="result-print-blank"></span></div>
+                <div class="result-print-field"><label>NO. OF TIMES PRESENT:</label><span class="result-print-blank"></span></div>
+              </div>
+              <div class="result-print-detail-row">
+                <div class="result-print-field"><label>DATE:</label><span data-print-result-date></span><label>AVERAGE:</label><span data-print-result-average></span></div>
+                <div class="result-print-field"><label>CLASS AVERAGE:</label><span data-print-result-class-average></span></div>
+              </div>
+            </section>
+            <section class="result-print-report">
+              <div class="result-print-academic">
+                <div class="result-print-section-heading">ACADEMIC PROGRESS REPORT SUMMARIES AND TESTS</div>
+                <table class="result-print-academic-table" data-result-print-table>
+                  <thead data-result-print-head></thead>
+                  <tbody data-result-print-body></tbody>
+                  <tfoot data-result-print-foot></tfoot>
+                </table>
+                <div class="result-print-academic-bottom">
+                  <div class="result-print-decision"><span>DECISION:</span><span>PASS ☐</span><span>FAILS ☐</span></div>
+                </div>
+              </div>
+              <div class="result-print-domain">
+                <div class="result-print-section-heading">AFFECTIVE DOMAIN<br>(VALUES, ATTITUDES, INTERESTS, CHARACTER)</div>
+                <table class="result-print-domain-table">
+                  <tbody>
+                    <tr><th class="result-print-domain-title">BEHAVIOURS</th><th class="result-print-domain-title" colspan="5">GRADINGS</th></tr>
+                    <tr><th class="result-print-behaviour"></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th></tr>
+                    <tr><td class="result-print-behaviour">AESTHETIC APPRECIATION</td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td class="result-print-behaviour">ATTENDANCE AT CLASS</td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td class="result-print-behaviour">Creativity</td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td class="result-print-behaviour">Honesty</td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td class="result-print-behaviour">Initiative</td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td class="result-print-behaviour">Leadership Role</td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td class="result-print-behaviour">Neatness</td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td class="result-print-behaviour">Obedience</td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td class="result-print-behaviour">Politeness</td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td class="result-print-behaviour">Punctuality</td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td class="result-print-behaviour">Self-Control</td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td class="result-print-behaviour">Sense of Responsibility</td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td class="result-print-behaviour">Sociability</td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td class="result-print-behaviour">Organizational Ability</td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td class="result-print-behaviour">Perseverance</td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td class="result-print-behaviour">Spirit of Co-operation</td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr><th class="result-print-domain-title" colspan="6">PSYCHOMOTOR DOMAIN<br>(MANUAL AND PHYSICAL SKILLS)</th></tr>
+                    <tr><th class="result-print-behaviour">ACTIVITIES</th><th colspan="5">GRADINGS</th></tr>
+                    <tr><th class="result-print-behaviour"></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th></tr>
+                    <tr><td class="result-print-behaviour">Games</td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td class="result-print-behaviour">Sports</td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td class="result-print-behaviour">Handling of Tools</td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td class="result-print-behaviour">Handwriting</td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td class="result-print-behaviour">Communication Skills</td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td class="result-print-behaviour">Painting &amp; Drawing</td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td class="result-print-behaviour">Musical Skills</td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td class="result-print-behaviour">Crafts</td><td></td><td></td><td></td><td></td><td></td></tr>
+                  </tbody>
+                </table>
+                <div class="result-print-rating-key">
+                  <h4>KEY TO RATINGS</h4>
+                  <strong>AFFECTIVE &amp; PSYCHOMOTOR DOMAINS</strong>
+                  <div><span>A</span><span>= Excellent</span><span>80% and Above</span></div>
+                  <div><span>B</span><span>= Very Good</span><span>60 - 79%</span></div>
+                  <div><span>C</span><span>= Good</span><span>50 - 59%</span></div>
+                  <div><span>D</span><span>= Fair</span><span>40 - 49%</span></div>
+                  <div><span>E</span><span>= Fail</span><span>Below 40%</span></div>
+                </div>
+              </div>
+            </section>
+            <section class="result-print-comments-area" aria-label="Remarks">
+              <div class="result-print-comments">
+                <div>CLASS TEACHER'S REMARKS</div>
+                <div>PRINCIPAL'S COMMENTS</div>
+              </div>
+              <div aria-hidden="true"></div>
+            </section>
+            <section class="result-print-bottom">
+              <div class="result-print-grade-interpretation">
+                <h4>INTERPRETATION OF GRADES (COGNITIVE DOMAIN)</h4>
+                <div><span>FAIL = 0 - 49</span><span>MERIT = 60 - 79</span></div>
+                <div><span>PASS = 50 - 59</span><span>DISTINCTION = 80 &amp; ABOVE</span></div>
+              </div>
+              <div class="result-print-principal-signature">
+                <span></span>
+                <strong>PRINCIPAL'S SIGNATURE AND DATE</strong>
+              </div>
+            </section>
+          </article>
         </section>
 
         <section class="page-view" data-view="reports" hidden>

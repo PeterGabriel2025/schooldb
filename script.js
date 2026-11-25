@@ -485,7 +485,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const noticeButton = event.target.closest('[data-notice]');
     if (noticeButton) showToast(noticeButton.dataset.notice);
 
-    if (event.target.closest('[data-print]')) window.print();
+    const printButton = event.target.closest('[data-print]');
+    if (printButton) {
+      document.body.dataset.printMode = printButton.dataset.print;
+      window.print();
+    }
+  });
+
+  window.addEventListener('afterprint', () => {
+    delete document.body.dataset.printMode;
   });
 
   document.querySelectorAll('[data-filter]').forEach((input) => {
@@ -1982,14 +1990,23 @@ document.addEventListener('DOMContentLoaded', () => {
       if (requestId !== resultRequestId) return;
       restoreWorkspaceFields((control) => control === resultTermSelect);
       const termId = resultTermSelect.value;
-      const { data: enrollments, error: enrollmentError } = await supabase
-        .from('class_enrollments')
-        .select('student_id, division, student_subject_selections (class_subject_offering_id, class_subject_offerings (subjects (name))), students (id, first_name, other_names, last_name, admission_number)')
-        .eq('class_id', classId)
-        .eq('academic_session_id', sessionId)
-        .order('enrolled_on');
+      const [enrollmentsResult, offeringsResult] = await Promise.all([
+        supabase.from('class_enrollments')
+          .select('student_id, division, student_subject_selections (class_subject_offering_id, class_subject_offerings (subjects (name), assessment_schemes (id, is_current, assessment_components (id, code, name, max_score, display_order, counts_toward_total)))), students (id, first_name, other_names, last_name, admission_number, gender)')
+          .eq('class_id', classId)
+          .eq('academic_session_id', sessionId)
+          .order('enrolled_on'),
+        supabase.from('class_subject_offerings')
+          .select('id, is_active, subjects (name), assessment_schemes (id, is_current, assessment_components (id, code, name, max_score, display_order, counts_toward_total))')
+          .eq('class_id', classId)
+          .eq('academic_session_id', sessionId)
+          .order('created_at')
+      ]);
       if (requestId !== resultRequestId) return;
-      if (enrollmentError) throw enrollmentError;
+      if (enrollmentsResult.error) throw enrollmentsResult.error;
+      if (offeringsResult.error) throw offeringsResult.error;
+      const enrollments = enrollmentsResult.data || [];
+      const classOfferings = offeringsResult.data || [];
       const previousStudentId = resultStudentSelect.value;
       resultStudentSelect.replaceChildren();
       (enrollments || []).filter((item) => item.students).forEach(({ students: student }) =>
@@ -2012,7 +2029,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const selectedOfferingIds = selectedSubjects.map((item) => item.class_subject_offering_id);
       let resultsQuery = supabase
           .from('student_subject_results')
-          .select('id, student_id, class_subject_offering_id, status, class_subject_offerings (subjects (name))')
+          .select('id, student_id, class_subject_offering_id, status, assessment_schemes (assessment_components (id, code, name, max_score, display_order, counts_toward_total)), class_subject_offerings (subjects (name))')
           .eq('class_id', classId)
           .eq('academic_session_id', sessionId)
           .eq('term_id', termId)
@@ -2025,6 +2042,15 @@ document.addEventListener('DOMContentLoaded', () => {
         : await resultsQuery;
       if (requestId !== resultRequestId) return;
       if (resultsError) throw resultsError;
+      if (!isSeniorStreamClass(classId)) {
+        const historicalOfferingIds = new Set((results || []).map((result) => result.class_subject_offering_id));
+        selectedSubjects = classOfferings
+          .filter((offering) => offering.is_active || historicalOfferingIds.has(offering.id))
+          .map((offering) => ({
+            class_subject_offering_id: offering.id,
+            class_subject_offerings: offering
+          }));
+      }
       const calculations = await Promise.all((results || []).map(async (result) => {
         const { data, error } = await supabase.rpc('get_result_calculation', { p_result_id: result.id });
         if (error) throw error;
@@ -2042,9 +2068,182 @@ document.addEventListener('DOMContentLoaded', () => {
       );
     } catch (error) {
       if (requestId !== resultRequestId) return;
+      resetResultView('Could not load this student result.');
       showDataError('Loading the student result', error, (message) => setScreenNotice('[data-result-notice]', message));
-      clearTable(document.querySelector('[data-result-body]'), 'Could not load this student result.', 7);
     }
+  };
+
+  const setPrintResultText = (field, value) => {
+    document.querySelector(`[data-print-result-${field}]`).textContent = value || '—';
+  };
+
+  const setResultMetric = (field, value) => {
+    document.querySelector(`[data-result-${field}]`).textContent = value;
+    if (field === 'average' || field === 'position') setPrintResultText(field, value);
+  };
+
+  const assessmentComponentsForResult = (result) => {
+    const resultSchemes = result.assessment_schemes;
+    const resultScheme = Array.isArray(resultSchemes) ? resultSchemes[0] : resultSchemes;
+    if (resultScheme?.assessment_components?.length) {
+      return resultScheme.assessment_components;
+    }
+    const schemes = result.class_subject_offerings?.assessment_schemes;
+    const availableSchemes = Array.isArray(schemes) ? schemes : schemes ? [schemes] : [];
+    return (availableSchemes.find((scheme) => scheme.is_current) || availableSchemes[0])
+      ?.assessment_components || [];
+  };
+
+  const renderPrintableResultTable = (printableResults) => {
+    const componentMap = new Map();
+    printableResults.forEach(({ result }) => {
+      assessmentComponentsForResult(result)
+        .slice()
+        .sort((left, right) => Number(left.display_order) - Number(right.display_order))
+        .forEach((component) => {
+          if (component.code && !componentMap.has(component.code)) {
+            componentMap.set(component.code, component);
+          }
+        });
+    });
+    const components = [...componentMap.values()];
+    const componentPrintLabel = (component) => {
+      const identity = `${component.code || ''} ${component.name || ''}`.toLowerCase();
+      const label = /\b(continuous assessment|class assessment|class work|coursework|ca)\b/.test(identity)
+        ? 'CA'
+        : /\b(test|quiz)\b/.test(identity)
+          ? 'TEST'
+          : /\b(examination|exam)\b/.test(identity)
+            ? 'EXAM'
+            : component.code || component.name || 'ASSESSMENT';
+      const maxScore = component.max_score;
+      return `${label.toUpperCase()}${maxScore === null || maxScore === undefined ? '' : ` (${maxScore})`}`;
+    };
+    const head = document.querySelector('[data-result-print-head]');
+    const body = document.querySelector('[data-result-print-body]');
+    const foot = document.querySelector('[data-result-print-foot]');
+    const header = document.createElement('tr');
+    const headers = [
+      { label: 'SUBJECTS', className: 'result-print-subject-heading' },
+      ...components.map((component) => ({
+        label: componentPrintLabel(component),
+        className: 'result-print-vertical'
+      })),
+      ...['TOTAL SCORE', 'CLASS AVERAGE', 'GRADES', 'POSITION', 'REMARKS', "TEACHER'S SIGNATURE"]
+        .map((label) => ({ label, className: 'result-print-vertical' }))
+    ];
+    headers.forEach(({ label, className }) => {
+      const cell = document.createElement('th');
+      cell.scope = 'col';
+      cell.className = className;
+      cell.textContent = label;
+      header.append(cell);
+    });
+    head.replaceChildren(header);
+    body.replaceChildren();
+
+    printableResults.forEach(({ result, calculation }) => {
+      const row = document.createElement('tr');
+      const subjectCell = document.createElement('td');
+      subjectCell.className = 'result-print-subject';
+      subjectCell.textContent = result.class_subject_offerings?.subjects?.name || 'Subject';
+      row.append(subjectCell);
+      components.forEach((component) => {
+        const cell = document.createElement('td');
+        const score = calculation?.component_scores?.[component.code];
+        cell.textContent = score === null || score === undefined ? '' : String(score);
+        row.append(cell);
+      });
+      [
+        calculation?.is_complete ? calculation.subject_total : '',
+        '',
+        calculation?.is_complete ? calculation.grade || '' : '',
+        '',
+        '',
+        ''
+      ].forEach((value) => {
+        const cell = document.createElement('td');
+        cell.textContent = String(value);
+        row.append(cell);
+      });
+      body.append(row);
+    });
+
+    if (printableResults.length) {
+      const targetRows = Math.max(26, printableResults.length + 3);
+      const emptyRows = targetRows - printableResults.length;
+      for (let index = 0; index < emptyRows; index += 1) {
+        const row = document.createElement('tr');
+        const subjectCell = document.createElement('td');
+        subjectCell.className = 'result-print-subject';
+        if (index >= emptyRows - 3) subjectCell.textContent = String(index - emptyRows + 4);
+        row.append(subjectCell);
+        for (let column = 0; column < headers.length - 1; column += 1) {
+          row.append(document.createElement('td'));
+        }
+        body.append(row);
+      }
+    }
+
+    const totalRow = document.createElement('tr');
+    totalRow.className = 'result-print-total-row';
+    const totalLabel = document.createElement('td');
+    totalLabel.className = 'result-print-subject';
+    totalLabel.textContent = 'TOTAL';
+    totalRow.append(totalLabel);
+    components.forEach((component) => {
+      const cell = document.createElement('td');
+      cell.dataset.printComponentTotal = component.code;
+      totalRow.append(cell);
+    });
+    const grandTotal = document.createElement('td');
+    grandTotal.dataset.printGrandTotal = '';
+    totalRow.append(grandTotal);
+    for (let index = 0; index < 5; index += 1) totalRow.append(document.createElement('td'));
+    foot.replaceChildren(totalRow);
+    return { components, printableResults };
+  };
+
+  const updatePrintableResultSummary = (
+    standing,
+    standings,
+    enrollments,
+    enrollment,
+    streamClass,
+    printableResults,
+    components
+  ) => {
+    const standingsGroup = streamClass
+      ? standings.filter((item) => item.division === enrollment.division)
+      : standings;
+    const enrollmentGroup = streamClass
+      ? enrollments.filter((item) => item.division === enrollment.division)
+      : enrollments;
+    setPrintResultText('class-size', String(standingsGroup.length || enrollmentGroup.length));
+    const averages = standingsGroup
+      .filter((item) => item.average_score !== null && Number.isFinite(Number(item.average_score)))
+      .map((item) => Number(item.average_score));
+    document.querySelector('[data-print-result-class-average]').textContent = averages.length
+      ? (averages.reduce((sum, average) => sum + average, 0) / averages.length).toFixed(1)
+      : '';
+
+    const allSubjectsComplete = printableResults.length > 0
+      && printableResults.every(({ calculation }) => calculation?.is_complete);
+    document.querySelectorAll('[data-print-component-total]').forEach((cell) => {
+      if (!allSubjectsComplete) return;
+      const code = cell.dataset.printComponentTotal;
+      if (components.find((component) => component.code === code)?.counts_toward_total !== true) return;
+      const scores = printableResults
+        .map(({ calculation }) => calculation?.component_scores?.[code])
+        .filter((score) => score !== null && score !== undefined && Number.isFinite(Number(score)));
+      if (scores.length) {
+        cell.textContent = String(scores.reduce((sum, score) => sum + Number(score), 0));
+      }
+    });
+    const grandTotalCell = document.querySelector('[data-print-grand-total]');
+    grandTotalCell.textContent = standing?.is_complete && standing.grand_total !== null
+      ? String(standing.grand_total)
+      : '';
   };
 
   const resetResultView = (message) => {
@@ -2053,12 +2252,21 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelector('[data-result-avatar]').textContent = '?';
     document.querySelector('[data-result-status]').textContent = 'No result';
     document.querySelector('[data-result-status]').className = 'badge muted';
-    document.querySelector('[data-result-total]').textContent = '—';
-    document.querySelector('[data-result-average]').textContent = '—';
-    document.querySelector('[data-result-position]').textContent = '—';
+    setResultMetric('total', '—');
+    setResultMetric('average', '—');
+    setResultMetric('position', '—');
     document.querySelector('[data-result-context]').textContent = '';
     document.querySelector('[data-result-head]').replaceChildren();
     clearTable(document.querySelector('[data-result-body]'), message, 7);
+    [
+      'name', 'class', 'class-size', 'sex', 'admission', 'term', 'date', 'school-level'
+    ].forEach((field) => {
+      setPrintResultText(field, '—');
+    });
+    document.querySelector('[data-print-result-class-average]').textContent = '';
+    document.querySelector('[data-result-print-head]').replaceChildren();
+    document.querySelector('[data-result-print-body]').replaceChildren();
+    document.querySelector('[data-result-print-foot]').replaceChildren();
     setScreenNotice('[data-result-notice]', message);
   };
 
@@ -2073,13 +2281,39 @@ document.addEventListener('DOMContentLoaded', () => {
     const fullName = [student.first_name, student.other_names, student.last_name].filter(Boolean).join(' ');
     const streamClass = isSeniorStreamClass(classId);
     const streamDivision = streamClass ? enrollment.division : '';
+    const schoolClass = currentClassesAll.find((item) => item.id === classId);
+    const className = schoolClass?.name || '';
+    const sessionName = currentSessions.find((item) => item.id === sessionId)?.name || '';
+    const termName = resultTermSelect.selectedOptions[0]?.textContent || '';
     document.querySelector('[data-result-name]').textContent = fullName;
     document.querySelector('[data-result-admission]').textContent =
-      `${student.admission_number} · ${currentClassesAll.find((item) => item.id === classId)?.name || ''}${streamDivision ? ` · ${streamDivision.charAt(0).toLocaleUpperCase()}${streamDivision.slice(1)} division` : ''}`;
+      `${student.admission_number} · ${className}${streamDivision ? ` · ${streamDivision.charAt(0).toLocaleUpperCase()}${streamDivision.slice(1)} division` : ''}`;
     document.querySelector('[data-result-avatar]').textContent =
       fullName.split(/\s+/).slice(0, 2).map((part) => part.charAt(0)).join('').toLocaleUpperCase();
-    document.querySelector('[data-result-context]').textContent =
-      `${resultTermSelect.selectedOptions[0]?.textContent || ''} · ${currentSessions.find((item) => item.id === sessionId)?.name || ''}`;
+    document.querySelector('[data-result-context]').textContent = `${termName} · ${sessionName}`;
+    setPrintResultText('name', fullName);
+    setPrintResultText('class', `${className}${streamDivision
+      ? ` · ${streamDivision.charAt(0).toLocaleUpperCase()}${streamDivision.slice(1)}`
+      : ''}`);
+    setPrintResultText('school-level', /^SSS\s*[1-3]/i.test(className)
+      ? 'ASSESSMENT RECORD FOR SENIOR SECONDARY SCHOOLS'
+      : /^JSS\s*[1-3]/i.test(className)
+        ? 'ASSESSMENT RECORD FOR JUNIOR SECONDARY SCHOOLS'
+        : 'ASSESSMENT RECORD');
+    setPrintResultText('sex', student.gender
+      ? `${student.gender.charAt(0).toLocaleUpperCase()}${student.gender.slice(1)}`
+      : '—');
+    setPrintResultText('admission', student.admission_number);
+    setPrintResultText('term', termName);
+    setPrintResultText('date', new Date().toLocaleDateString());
+    const enrollmentGroup = streamClass
+      ? enrollments.filter((item) => item.division === enrollment.division)
+      : enrollments;
+    setPrintResultText('class-size', String(enrollmentGroup.length));
+    setResultMetric('total', '—');
+    setResultMetric('average', '—');
+    setResultMetric('position', '—');
+    document.querySelector('[data-print-result-class-average]').textContent = '';
     const status = document.querySelector('[data-result-status]');
     const allSubjectsHaveResults = !streamClass || results.length === selectedSubjects.length;
     const allApproved = results.length > 0 && allSubjectsHaveResults
@@ -2114,6 +2348,19 @@ document.addEventListener('DOMContentLoaded', () => {
           calculation: null
         }))
       : results;
+    const printableResults = selectedSubjects.length
+      ? [...selectedSubjects]
+        .sort((left, right) => (left.class_subject_offerings?.subjects?.name || '')
+          .localeCompare(right.class_subject_offerings?.subjects?.name || ''))
+        .map((selection) => calculationByOffering.get(selection.class_subject_offering_id) || ({
+          result: {
+            class_subject_offerings: selection.class_subject_offerings,
+            status: 'not_started'
+          },
+          calculation: null
+        }))
+      : results;
+    const { components: printComponents } = renderPrintableResultTable(printableResults);
     displayResults.forEach(({ result, calculation }) => {
       const row = document.createElement('tr');
       const subject = result.class_subject_offerings?.subjects?.name || 'Subject';
@@ -2154,15 +2401,22 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       if (error) throw error;
       const standing = standings?.find((item) => item.student_id === studentId);
-      document.querySelector('[data-result-total]').textContent =
-        standing?.is_complete && standing.grand_total !== null ? String(standing.grand_total) : '—';
-      document.querySelector('[data-result-average]').textContent =
+      setResultMetric('total',
+        standing?.is_complete && standing.grand_total !== null ? String(standing.grand_total) : '—');
+      setResultMetric('average',
         standing?.is_complete && standing.average_score !== null
           ? Number(standing.average_score).toFixed(1)
-          : '—';
-      document.querySelector('[data-result-position]').textContent = standing?.position
-        ? String(standing.position)
-        : '—';
+          : '—');
+      setResultMetric('position', standing?.position ? String(standing.position) : '—');
+      updatePrintableResultSummary(
+        standing,
+        standings || [],
+        enrollments,
+        enrollment,
+        streamClass,
+        printableResults,
+        printComponents
+      );
       setScreenNotice('[data-result-notice]', streamClass && !selectedSubjects.length
         ? 'Assign this student a division and nine subjects in the register before processing their result.'
         : results.length
@@ -2174,9 +2428,9 @@ document.addEventListener('DOMContentLoaded', () => {
         : 'No result records exist for this student in the selected term yet.');
     } catch (error) {
       console.error('Could not load the class position for this result.', error);
-      document.querySelector('[data-result-total]').textContent = '—';
-      document.querySelector('[data-result-average]').textContent = '—';
-      document.querySelector('[data-result-position]').textContent = '—';
+      setResultMetric('total', '—');
+      setResultMetric('average', '—');
+      setResultMetric('position', '—');
       setScreenNotice('[data-result-notice]', `Subject results loaded, but class standings are unavailable: ${error.message}`);
     }
   };
