@@ -5956,6 +5956,25 @@ thead th {
   }
 }
 
+.management-panel#subjects-panel .subject-offering-search {
+  display: grid;
+  max-width: 480px;
+  gap: 6px;
+  margin-bottom: 12px;
+  color: var(--text);
+  font-size: .82rem;
+  font-weight: 650;
+}
+
+.management-panel#subjects-panel .subject-offering-search input {
+  width: 100%;
+  min-width: 0;
+}
+
+.management-panel#subjects-panel .subject-search-empty {
+  margin: 0 0 10px;
+}
+
 @media (max-width: 360px) {
   .sidebar {
     padding-right: 10px;

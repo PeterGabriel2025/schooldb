@@ -83,6 +83,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const resultSessionSelect = document.querySelector('#result-session-select');
   const resultTermSelect = document.querySelector('#result-term-select');
   const resultStudentSelect = document.querySelector('#result-student-select');
+  const subjectOfferingSearch = document.querySelector('[data-subject-offering-search]');
+  const subjectSearchEmpty = document.querySelector('[data-subject-search-empty]');
   const sectionAssessmentSelect = document.querySelector('[data-section-assessment-select]');
   const signOutButton = document.querySelector('[data-auth-action]');
   const sessionSignOutButton = document.querySelector('[data-session-sign-out]');
@@ -125,6 +127,33 @@ document.addEventListener('DOMContentLoaded', () => {
   let scoreRequestId = 0;
   let masterRequestId = 0;
   let resultRequestId = 0;
+
+  const filterSubjectOfferingRows = () => {
+    const query = subjectOfferingSearch?.value.trim().toLocaleLowerCase() || '';
+    const rows = [...document.querySelectorAll('[data-subjects-body] tr')];
+    let visibleRows = 0;
+    rows.forEach((row) => {
+      const subjectName = row.querySelector('[data-subject-name]')?.value || '';
+      const searchableText = [
+        subjectName,
+        row.cells[1]?.textContent,
+        row.cells[2]?.textContent,
+        row.cells[3]?.textContent
+      ].join(' ').toLocaleLowerCase();
+      const matches = !query || searchableText.includes(query);
+      row.hidden = !matches;
+      if (matches) visibleRows += 1;
+    });
+    if (subjectSearchEmpty) subjectSearchEmpty.hidden = !query || visibleRows > 0;
+  };
+
+  subjectOfferingSearch?.addEventListener('input', filterSubjectOfferingRows);
+
+  document.querySelector('[data-panel="subjects-panel"]')?.addEventListener('click', () => {
+    if (currentProfile?.role === 'administrator') {
+      void loadManagementData().then(filterSubjectOfferingRows);
+    }
+  });
 
   const applyTheme = (theme) => {
     const isDark = theme === 'dark';

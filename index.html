@@ -525,6 +525,8 @@
               <button class="btn-primary compact" type="submit">Add subject to all classes in level</button>
               <p class="form-message" data-subject-offering-message role="status" aria-live="polite"></p>
             </form>
+            <label class="subject-offering-search">Search offerings<input type="search" data-subject-offering-search placeholder="Search subject, class, or session" autocomplete="off"></label>
+            <p class="muted-text subject-search-empty" data-subject-search-empty hidden>No offerings match your search.</p>
             <div class="table-wrap"><table class="data-table subjects-table"><thead><tr><th>Subject</th><th>Class</th><th>Session</th><th>Status</th><th data-admin-only hidden>Admin actions</th></tr></thead><tbody data-subjects-body></tbody></table></div>
           </div>
           <div class="panel management-panel" id="classes-panel" hidden><div class="panel-header"><h3>School classes</h3><span class="muted-text">Edit, archive, or restore classes</span></div><div class="class-cards" data-management-class-list></div></div>
